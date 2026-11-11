@@ -1,0 +1,118 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Where marketplace profit leaks</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap">
+<style>:root{--color-fg:#1c1912;--color-fg-muted:#6b665a;--color-bg:#faf7f1;--color-panel:#fff;--color-border-line:#e3dccf;--color-ok:#1f8a5b;--color-warn:#a8650a;--color-bad:#c4452f;--cds-radius:12px;--cds-pad-lg:1.25rem;--cds-gap-sm:.5rem;--cds-gap-md:1rem;--cds-font-size-title:1.9rem;--cds-font-size-heading:1.05rem;--cds-font-size-body:1rem;--cds-font-size-caption:.8rem;--cds-font-weight-medium:500;--cds-chart-muted:#c9c2b2;--cds-chart-status-critical:#c4452f;--font-anthropic-sans:'IBM Plex Sans',system-ui,sans-serif;--font-anthropic-serif:'Sora',system-ui,sans-serif;color-scheme:light}
+body{margin:0;background:var(--color-bg);color:var(--color-fg);font:400 1rem/1.5 var(--font-anthropic-sans);padding:1.5rem max(16px,env(safe-area-inset-left,0px))}
+.back{display:block;max-width:68rem;margin:0 auto 1rem;font-size:.9rem}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script></head><body>
+<a class="back" href="../index.html">← Back to portfolio</a>
+<script>window.__D={"platforms": [{"platform": "Noon", "lines": 589, "gross": 254224, "returns": 40782, "fees": 64086, "profit": 30412, "unknown_lines": 122, "return_pct": 0.1604, "fee_pct": 0.2521, "margin_pct": 0.1196, "unknown_pct": 0.2071}, {"platform": "Jumia", "lines": 239, "gross": 97551, "returns": 28331, "fees": 12870, "profit": 7481, "unknown_lines": 6, "return_pct": 0.2904, "fee_pct": 0.1319, "margin_pct": 0.0767, "unknown_pct": 0.0251}, {"platform": "Amazon", "lines": 38, "gross": 10399, "returns": 497, "fees": 2543, "profit": 2457, "unknown_lines": 4, "return_pct": 0.0478, "fee_pct": 0.2445, "margin_pct": 0.2363, "unknown_pct": 0.1053}], "monthly": [{"month": "2026-04-01", "lines": 20, "net_sales": 10915, "profit": 3193, "margin": 0.2925}, {"month": "2026-05-01", "lines": 51, "net_sales": 15990, "profit": 3593, "margin": 0.2247}, {"month": "2026-06-01", "lines": 38, "net_sales": 11010, "profit": 2589, "margin": 0.2351}, {"month": "2026-07-01", "lines": 34, "net_sales": 10925, "profit": 2348, "margin": 0.2149}, {"month": "2026-08-01", "lines": 182, "net_sales": 62677, "profit": 10584, "margin": 0.1689}, {"month": "2026-09-01", "lines": 240, "net_sales": 91909, "profit": 13618, "margin": 0.1482}, {"month": "2026-10-01", "lines": 143, "net_sales": 41863, "profit": 3524, "margin": 0.0842}], "status": [{"status": "Delivered & settled", "lines": 665, "profit": 56982}, {"status": "Returned after settlement", "lines": 68, "profit": -9713}, {"status": "Failed delivery", "lines": 50, "profit": -3390}, {"status": "Returned before settlement", "lines": 49, "profit": -4681}, {"status": "Partial return after settlement", "lines": 3, "profit": -325}, {"status": "In progress", "lines": 30, "profit": 1477}], "summary": [{"profit_kept": 58459, "profit_lost": 18109, "leakage": 0.3098, "lines": 866, "lines_lost": 170, "total_profit": 40350}]};window.dash={data:function(id){var d=window.__D[id]||[];return{status:'ok',data:d,columns:d.length?Object.keys(d[0]):[]}},onData:function(fn){fn();window.addEventListener('resize',fn)},colors:['#c9780b','#2f7f94','#7a5aa8']};</script>
+<div id="dash-root"><style>
+.pl{--a1:#2f6df6;--a2:#7aa7ff;--bad:#ef4f6a;--soft:color-mix(in srgb,#2f6df6 9%,var(--color-panel));max-width:68rem;margin-inline:auto;font-family:var(--font-anthropic-sans);color:var(--color-fg);font-variant-numeric:tabular-nums}
+.pl h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0 0 .25rem}
+.pl .take{color:#fff;margin:0 0 var(--cds-gap-md);font-size:var(--cds-font-size-heading);line-height:1.5;padding:1.25rem 1.5rem;border-radius:20px;background:linear-gradient(135deg,#2f6df6 0%,#1e46c8 60%,#6a3fd6 100%);box-shadow:0 8px 24px color-mix(in srgb,#2f6df6 30%,transparent)}.pl .take span{font-weight:700}
+.pl .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr));gap:var(--cds-gap-md);margin-bottom:var(--cds-gap-md)}
+.pl .card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:20px;padding:var(--cds-pad-lg);box-shadow:0 2px 10px color-mix(in srgb,#2f6df6 6%,transparent)}.pl .kpis .card:nth-child(1){border-top:4px solid var(--a1)}.pl .kpis .card:nth-child(2){border-top:4px solid var(--bad)}.pl .kpis .card:nth-child(3){border-top:4px solid #f5a524}.pl .kpis .card:nth-child(4){border-top:4px solid #22b8a0}
+.pl .big{font-family:var(--font-anthropic-serif);font-size:var(--cds-font-size-title);font-weight:400;display:block}
+.pl .lab{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.pl .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:var(--cds-gap-md);margin-bottom:var(--cds-gap-md)}
+.pl h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0 0 .15rem}
+.pl .note{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin:0 0 var(--cds-gap-sm)}
+.pl table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption)}
+.pl th,.pl td{text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--color-border-line)}
+.pl th:first-child,.pl td:first-child{text-align:left}
+.pl th{color:var(--color-fg-muted);font-weight:400}
+.pl .bar{display:grid;grid-template-columns:9.5rem 1fr 4.5rem;gap:.5rem;align-items:center;margin:.35rem 0;font-size:var(--cds-font-size-caption)}
+.pl .bar i{display:block;height:1rem;border-radius:8px;background:linear-gradient(90deg,var(--a2),var(--a1))}
+.pl .bar i.neg{background:linear-gradient(90deg,#ff9aa9,var(--bad))}.pl thead th{background:var(--soft);padding:.45rem .5rem}.pl thead th:first-child{border-radius:10px 0 0 10px}.pl thead th:last-child{border-radius:0 10px 10px 0}.pl tbody tr:hover td{background:var(--soft)}.pl li i{color:var(--a1);font-style:normal;font-weight:600}.pl li::marker{color:var(--a1);font-weight:700}
+.pl .bar span:last-child{text-align:right}
+.pl ol{margin:0;padding-left:1.2rem;line-height:1.55}
+.pl li{margin-bottom:.6rem}
+.pl li b{font-weight:600}
+.pl .chart{min-height:200px}
+.pl details{margin-top:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+
+.pl{background:radial-gradient(60rem 24rem at 0% 0%,color-mix(in srgb,#2f6df6 14%,transparent),transparent 70%),radial-gradient(50rem 22rem at 100% 10%,color-mix(in srgb,#8b5cf6 12%,transparent),transparent 70%);padding:1rem;border-radius:24px}
+.pl h1{background:linear-gradient(90deg,#2f6df6,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}
+.pl .kpis .card:nth-child(1){background:linear-gradient(160deg,color-mix(in srgb,#2f6df6 16%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(2){background:linear-gradient(160deg,color-mix(in srgb,#ef4f6a 16%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(3){background:linear-gradient(160deg,color-mix(in srgb,#f5a524 18%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(4){background:linear-gradient(160deg,color-mix(in srgb,#22b8a0 16%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(1) .big{color:#2f6df6}.pl .kpis .card:nth-child(2) .big{color:#ef4f6a}.pl .kpis .card:nth-child(3) .big{color:#e08a00}.pl .kpis .card:nth-child(4) .big{color:#16a089}
+.pl .big{font-weight:600;font-size:2.1rem}
+.pl h2::before{content:"";display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:linear-gradient(135deg,#2f6df6,#8b5cf6);margin-right:.5rem}
+.pl .hot{color:#ef4f6a;font-weight:600}.pl .good{color:#16a089;font-weight:600}.pl .warn{color:#e08a00;font-weight:600}
+.pl thead th{background:linear-gradient(90deg,color-mix(in srgb,#2f6df6 22%,var(--color-panel)),color-mix(in srgb,#8b5cf6 18%,var(--color-panel)));color:var(--color-fg)}
+.pl ol{list-style:none;padding:0;counter-reset:n;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:var(--cds-gap-md)}
+.pl ol li{counter-increment:n;margin:0;padding:1rem 1rem 1rem 1.2rem;border-radius:16px;border-left:5px solid #2f6df6;background:color-mix(in srgb,#2f6df6 9%,var(--color-panel))}
+.pl ol li:nth-child(2){border-color:#ef4f6a;background:color-mix(in srgb,#ef4f6a 9%,var(--color-panel))}
+.pl ol li:nth-child(3){border-color:#f5a524;background:color-mix(in srgb,#f5a524 11%,var(--color-panel))}
+.pl ol li:nth-child(4){border-color:#22b8a0;background:color-mix(in srgb,#22b8a0 11%,var(--color-panel))}
+.pl ol li::before{content:counter(n);display:inline-flex;width:1.6rem;height:1.6rem;border-radius:50%;align-items:center;justify-content:center;background:#2f6df6;color:#fff;font-weight:700;margin-bottom:.4rem}
+.pl ol li:nth-child(2)::before{background:#ef4f6a}.pl ol li:nth-child(3)::before{background:#f5a524}.pl ol li:nth-child(4)::before{background:#22b8a0}
+.pl ol li b{display:block;margin-bottom:.25rem;font-size:var(--cds-font-size-body)}
+.pl li span[data-source]{font-weight:700}
+</style>
+<div class="pl">
+<h1>Where marketplace profit leaks</h1>
+<p class="take">Of every <span data-source="summary" data-field="profit_kept" id="k0">—</span> EGP of profit earned on good orders, returns and failed deliveries take back <span data-source="summary" data-field="leakage" id="k1">—</span>. Fix returns first, then Jumia, then Noon fees.</p>
+<div class="kpis">
+ <div class="card"><span class="lab">Net profit, all orders</span><span class="big" data-source="summary" data-field="total_profit" id="k2">—</span></div>
+ <div class="card"><span class="lab">Profit lost to returns &amp; failures</span><span class="big" data-source="summary" data-field="profit_lost" id="k3">—</span></div>
+ <div class="card"><span class="lab">Order lines that went wrong</span><span class="big" data-source="summary" data-field="lines_lost" id="k4">—</span></div>
+ <div class="card"><span class="lab">Order lines analysed</span><span class="big" data-source="summary" data-field="lines" id="k5">—</span></div>
+</div>
+<div class="grid">
+ <div class="card"><h2>Platform comparison</h2><p class="note">Share of gross sales, all order lines to date</p>
+  <table data-source="platforms" data-row-key="platform" id="ptab"><thead><tr><th data-field="platform">Platform</th><th data-field="gross">Gross</th><th data-field="return_pct">Returns</th><th data-field="fee_pct">Fees</th><th data-field="margin_pct">Profit</th></tr></thead><tbody></tbody></table></div>
+ <div class="card"><h2>Profit by order outcome</h2><p class="note">EGP, all order lines</p><div id="sbars" data-source="status"></div></div>
+</div>
+<div class="card" style="margin-bottom:var(--cds-gap-md)"><h2>Profit margin by month</h2><p class="note">Profit ÷ net sales, lines with a known purchase cost only. October is the lowest month; November is partial and left out.</p><div class="chart" id="mchart" data-source="monthly"></div></div>
+<div class="card"><h2>Findings and decisions</h2>
+<ol>
+ <li><b>Returns are the biggest leak.</b> Jumia returns <span data-source="platforms" data-where="platform=Jumia" data-field="return_pct" id="i1">—</span> of gross sales against <span data-source="platforms" data-where="platform=Noon" data-field="return_pct" id="i2">—</span> on Noon. <i>Decision:</i> pull the Jumia products with repeat returns and check packaging and listing accuracy before re-stocking.</li>
+ <li><b>Noon fees take the largest slice.</b> Fees are <span data-source="platforms" data-where="platform=Noon" data-field="fee_pct" id="i3">—</span> of Noon gross sales versus <span data-source="platforms" data-where="platform=Jumia" data-field="fee_pct" id="i4">—</span> on Jumia. <i>Decision:</i> price Noon items with the fee included and drop items whose margin cannot absorb it.</li>
+ <li><b>Margin has fallen every month since April.</b> It slid from <span data-source="monthly" data-where="month=2026-04-01" data-field="margin" id="i5">—</span> in April to <span data-source="monthly" data-where="month=2026-10-01" data-field="margin" id="i6">—</span> in October while volume grew. <i>Decision:</i> review prices of the fastest-growing products first.</li>
+ <li><b>Amazon is the most profitable but tiny.</b> Profit is <span data-source="platforms" data-where="platform=Amazon" data-field="margin_pct" id="i7">—</span> of gross sales on only <span data-source="platforms" data-where="platform=Amazon" data-field="lines" id="i8">—</span> order lines. <i>Decision:</i> list more of the best sellers there.</li>
+</ol></div>
+<details><summary>Notes and limits</summary>
+<p>Profit leakage = losses on returned and failed lines ÷ profit on delivered and in-progress lines. Margin per month excludes lines with an unknown purchase cost, so those months are slightly flattering. About <span data-source="platforms" data-where="platform=Noon" data-field="unknown_pct" id="i9">—</span> of Noon lines have no purchase cost yet. Figures combine all accounts and are anonymised; source: the operations reporting database.</p></details>
+</div>
+<script>
+(function(){
+const n=d3.format(','),p=d3.format('.1%'),f1=d=>d.toFixed?d.toFixed(0):d;
+const T=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+const ok=id=>dash.data(id).status==='ok'&&dash.data(id).data.length;
+function draw(){
+ if(ok('summary')){const s=dash.data('summary').data[0];
+  T('k0',n(s.profit_kept));T('k1',p(s.leakage));T('k2',n(s.total_profit));T('k3',n(s.profit_lost));T('k4',n(s.lines_lost));T('k5',n(s.lines));}
+ if(ok('platforms')){const r=dash.data('platforms').data;
+  d3.select('#ptab tbody').selectAll('tr').data(r,d=>d.platform).join('tr').attr('data-key',d=>d.platform)
+   .html('').each(function(d){const tr=d3.select(this);
+    tr.append('td').text(d.platform);tr.append('td').text(n(d.gross));tr.append('td').attr('class',d.return_pct>.2?'hot':d.return_pct<.08?'good':'warn').text(p(d.return_pct));tr.append('td').attr('class',d.fee_pct>.2?'hot':'good').text(p(d.fee_pct));tr.append('td').attr('class',d.margin_pct>.2?'good':d.margin_pct<.1?'hot':'warn').text(p(d.margin_pct));});
+  const g=(pl,k)=>r.find(x=>x.platform===pl);
+  T('i1',p(g('Jumia').return_pct));T('i2',p(g('Noon').return_pct));T('i3',p(g('Noon').fee_pct));T('i4',p(g('Jumia').fee_pct));
+  T('i7',p(g('Amazon').margin_pct));T('i8',n(g('Amazon').lines));T('i9',p(g('Noon').unknown_pct));}
+ if(ok('status')){const r=dash.data('status').data,mx=d3.max(r,d=>Math.abs(d.profit));
+  const box=d3.select('#sbars');box.selectAll('*').remove();
+  r.forEach(d=>{const row=box.append('div').attr('class','bar');row.append('span').text(d.status);
+   row.append('div').append('i').attr('class',d.profit<0?'neg':'').style('width',(Math.abs(d.profit)/mx*100)+'%');
+   row.append('span').text(n(d.profit));});}
+ if(ok('monthly')){const r=dash.data('monthly').data.map(d=>({m:new Date(d.month),v:+d.margin}));
+  T('i5',p(r[0].v));T('i6',p(r[r.length-1].v));
+  const box=document.getElementById('mchart');box.innerHTML='';
+  const W=box.clientWidth||320,H=200,m={l:44,r:48,t:10,b:24};
+  const x=d3.scaleUtc([r[0].m,r[r.length-1].m],[m.l,W-m.r]),y=d3.scaleLinear([0,d3.max(r,d=>d.v)*1.1],[H-m.b,m.t]);
+  const svg=d3.select(box).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`);
+  svg.append('g').attr('transform',`translate(0,${H-m.b})`).call(d3.axisBottom(x).ticks(Math.min(r.length,W<420?3:7)).tickFormat(d3.utcFormat('%b'))).call(g=>g.attr('font-size',null).attr('font-family',null).selectAll('text').style('fill','var(--color-fg-muted)').style('font-size','11px'));
+  svg.append('g').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(d3.format('.0%'))).call(g=>g.attr('font-size',null).attr('font-family',null).selectAll('text').style('fill','var(--color-fg-muted)').style('font-size','11px'));
+  const gid='ag'+Math.random().toString(36).slice(2,7);const df=svg.append('defs').append('linearGradient').attr('id',gid).attr('x1',0).attr('x2',0).attr('y1',0).attr('y2',1);[[0,.28],[.5,.08],[1,0]].forEach(s=>df.append('stop').attr('offset',s[0]).style('stop-color','#2f6df6').style('stop-opacity',s[1]));
+  svg.append('path').datum(r).attr('fill','url(#'+gid+')').attr('d',d3.area().x(d=>x(d.m)).y0(H-m.b).y1(d=>y(d.v)));
+  svg.append('path').datum(r).attr('fill','none').attr('stroke','#2f6df6').attr('stroke-width',3).attr('stroke-linejoin','round').attr('d',d3.line().x(d=>x(d.m)).y(d=>y(d.v)));
+  const l=r[r.length-1];svg.append('circle').attr('cx',x(l.m)).attr('cy',y(l.v)).attr('r',5).attr('fill','#2f6df6').attr('stroke','#fff').attr('stroke-width',2);
+  svg.append('text').attr('x',x(l.m)+8).attr('y',y(l.v)+4).style('fill','var(--color-fg)').style('font-size','11px').text(p(l.v));}
+}
+dash.onData(draw);
+})();
+</script>
+</div>
+</body></html>

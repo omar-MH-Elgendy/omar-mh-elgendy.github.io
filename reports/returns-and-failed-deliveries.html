@@ -1,0 +1,102 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Returns and failed deliveries</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap">
+<style>:root{--color-fg:#1c1912;--color-fg-muted:#6b665a;--color-bg:#faf7f1;--color-panel:#fff;--color-border-line:#e3dccf;--color-ok:#1f8a5b;--color-warn:#a8650a;--color-bad:#c4452f;--cds-radius:12px;--cds-pad-lg:1.25rem;--cds-gap-sm:.5rem;--cds-gap-md:1rem;--cds-font-size-title:1.9rem;--cds-font-size-heading:1.05rem;--cds-font-size-body:1rem;--cds-font-size-caption:.8rem;--cds-font-weight-medium:500;--cds-chart-muted:#c9c2b2;--cds-chart-status-critical:#c4452f;--font-anthropic-sans:'IBM Plex Sans',system-ui,sans-serif;--font-anthropic-serif:'Sora',system-ui,sans-serif;color-scheme:light}
+body{margin:0;background:var(--color-bg);color:var(--color-fg);font:400 1rem/1.5 var(--font-anthropic-sans);padding:1.5rem max(16px,env(safe-area-inset-left,0px))}
+.back{display:block;max-width:68rem;margin:0 auto 1rem;font-size:.9rem}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script></head><body>
+<a class="back" href="../index.html">← Back to portfolio</a>
+<script>window.__D={"r_loss": [{"platform": "Jumia", "type": "Failed delivery", "lines": 27, "loss": 3558, "loss_per_line": 132}, {"platform": "Jumia", "type": "Returned after settlement", "lines": 36, "loss": 6177, "loss_per_line": 172}, {"platform": "Jumia", "type": "Partial return", "lines": 1, "loss": 57, "loss_per_line": 57}, {"platform": "Noon", "type": "Failed delivery", "lines": 23, "loss": 356, "loss_per_line": 15}, {"platform": "Noon", "type": "Returned after settlement", "lines": 29, "loss": 4627, "loss_per_line": 160}, {"platform": "Noon", "type": "Returned before settlement", "lines": 49, "loss": 4681, "loss_per_line": 96}, {"platform": "Noon", "type": "Partial return", "lines": 2, "loss": 268, "loss_per_line": 134}, {"platform": "Amazon", "type": "Returned after settlement", "lines": 3, "loss": 319, "loss_per_line": 106}], "r_prod": [{"product": "Portable foldable grill", "lines": 13, "problem_lines": 9, "problem_rate": 0.6923, "gross": 5504, "profit": 0}, {"product": "Window wire curtain, white", "lines": 12, "problem_lines": 3, "problem_rate": 0.25, "gross": 2916, "profit": 784}, {"product": "Glass tart dish with lid", "lines": 29, "problem_lines": 7, "problem_rate": 0.2414, "gross": 9844, "profit": 788}, {"product": "Stainless jacket hanger", "lines": 21, "problem_lines": 5, "problem_rate": 0.2381, "gross": 10899, "profit": 1908}, {"product": "Kitchen/bath window curtain, checked", "lines": 34, "problem_lines": 7, "problem_rate": 0.2059, "gross": 6422, "profit": 166}, {"product": "Kitchen sink curtain, red", "lines": 21, "problem_lines": 4, "problem_rate": 0.1905, "gross": 5067, "profit": 1065}], "r_sum": [{"problem_lines": 170, "lines": 866, "problem_rate": 0.1963, "loss": 18109, "jumia_loss": 9792, "noon_loss": 9932, "amazon_loss": 319, "pending_orders": 13, "pending_value": 4076}]};window.dash={data:function(id){var d=window.__D[id]||[];return{status:'ok',data:d,columns:d.length?Object.keys(d[0]):[]}},onData:function(fn){fn();window.addEventListener('resize',fn)},colors:['#c9780b','#2f7f94','#7a5aa8']};</script>
+<div id="dash-root"><style>
+.pl{--a1:#2f6df6;--a2:#7aa7ff;--bad:#ef4f6a;--soft:color-mix(in srgb,#2f6df6 9%,var(--color-panel));max-width:68rem;margin-inline:auto;font-family:var(--font-anthropic-sans);color:var(--color-fg);font-variant-numeric:tabular-nums}
+.pl h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0 0 .25rem}
+.pl .take{color:#fff;margin:0 0 var(--cds-gap-md);font-size:var(--cds-font-size-heading);line-height:1.5;padding:1.25rem 1.5rem;border-radius:20px;background:linear-gradient(135deg,#2f6df6 0%,#1e46c8 60%,#6a3fd6 100%);box-shadow:0 8px 24px color-mix(in srgb,#2f6df6 30%,transparent)}.pl .take span{font-weight:700}
+.pl .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr));gap:var(--cds-gap-md);margin-bottom:var(--cds-gap-md)}
+.pl .card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:20px;padding:var(--cds-pad-lg);box-shadow:0 2px 10px color-mix(in srgb,#2f6df6 6%,transparent)}.pl .kpis .card:nth-child(1){border-top:4px solid var(--a1)}.pl .kpis .card:nth-child(2){border-top:4px solid var(--bad)}.pl .kpis .card:nth-child(3){border-top:4px solid #f5a524}.pl .kpis .card:nth-child(4){border-top:4px solid #22b8a0}
+.pl .big{font-family:var(--font-anthropic-serif);font-size:var(--cds-font-size-title);font-weight:400;display:block}
+.pl .lab{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.pl .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));gap:var(--cds-gap-md);margin-bottom:var(--cds-gap-md)}
+.pl h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0 0 .15rem}
+.pl .note{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin:0 0 var(--cds-gap-sm)}
+.pl table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption)}
+.pl th,.pl td{text-align:right;padding:.35rem .4rem;border-bottom:1px solid var(--color-border-line)}
+.pl th:first-child,.pl td:first-child{text-align:left}
+.pl th{color:var(--color-fg-muted);font-weight:400}
+.pl .bar{display:grid;grid-template-columns:9.5rem 1fr 4.5rem;gap:.5rem;align-items:center;margin:.35rem 0;font-size:var(--cds-font-size-caption)}
+.pl .bar i{display:block;height:1rem;border-radius:8px;background:linear-gradient(90deg,var(--a2),var(--a1))}
+.pl .bar i.neg{background:linear-gradient(90deg,#ff9aa9,var(--bad))}.pl thead th{background:var(--soft);padding:.45rem .5rem}.pl thead th:first-child{border-radius:10px 0 0 10px}.pl thead th:last-child{border-radius:0 10px 10px 0}.pl tbody tr:hover td{background:var(--soft)}.pl li i{color:var(--a1);font-style:normal;font-weight:600}.pl li::marker{color:var(--a1);font-weight:700}
+.pl .bar span:last-child{text-align:right}
+.pl ol{margin:0;padding-left:1.2rem;line-height:1.55}
+.pl li{margin-bottom:.6rem}
+.pl li b{font-weight:600}
+.pl .chart{min-height:200px}
+.pl details{margin-top:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+
+.pl{background:radial-gradient(60rem 24rem at 0% 0%,color-mix(in srgb,#2f6df6 14%,transparent),transparent 70%),radial-gradient(50rem 22rem at 100% 10%,color-mix(in srgb,#8b5cf6 12%,transparent),transparent 70%);padding:1rem;border-radius:24px}
+.pl h1{background:linear-gradient(90deg,#2f6df6,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600}
+.pl .kpis .card:nth-child(1){background:linear-gradient(160deg,color-mix(in srgb,#2f6df6 16%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(2){background:linear-gradient(160deg,color-mix(in srgb,#ef4f6a 16%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(3){background:linear-gradient(160deg,color-mix(in srgb,#f5a524 18%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(4){background:linear-gradient(160deg,color-mix(in srgb,#22b8a0 16%,var(--color-panel)),var(--color-panel))}
+.pl .kpis .card:nth-child(1) .big{color:#2f6df6}.pl .kpis .card:nth-child(2) .big{color:#ef4f6a}.pl .kpis .card:nth-child(3) .big{color:#e08a00}.pl .kpis .card:nth-child(4) .big{color:#16a089}
+.pl .big{font-weight:600;font-size:2.1rem}
+.pl h2::before{content:"";display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:linear-gradient(135deg,#2f6df6,#8b5cf6);margin-right:.5rem}
+.pl .hot{color:#ef4f6a;font-weight:600}.pl .good{color:#16a089;font-weight:600}.pl .warn{color:#e08a00;font-weight:600}
+.pl thead th{background:linear-gradient(90deg,color-mix(in srgb,#2f6df6 22%,var(--color-panel)),color-mix(in srgb,#8b5cf6 18%,var(--color-panel)));color:var(--color-fg)}
+.pl ol{list-style:none;padding:0;counter-reset:n;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:var(--cds-gap-md)}
+.pl ol li{counter-increment:n;margin:0;padding:1rem 1rem 1rem 1.2rem;border-radius:16px;border-left:5px solid #2f6df6;background:color-mix(in srgb,#2f6df6 9%,var(--color-panel))}
+.pl ol li:nth-child(2){border-color:#ef4f6a;background:color-mix(in srgb,#ef4f6a 9%,var(--color-panel))}
+.pl ol li:nth-child(3){border-color:#f5a524;background:color-mix(in srgb,#f5a524 11%,var(--color-panel))}
+.pl ol li:nth-child(4){border-color:#22b8a0;background:color-mix(in srgb,#22b8a0 11%,var(--color-panel))}
+.pl ol li::before{content:counter(n);display:inline-flex;width:1.6rem;height:1.6rem;border-radius:50%;align-items:center;justify-content:center;background:#2f6df6;color:#fff;font-weight:700;margin-bottom:.4rem}
+.pl ol li:nth-child(2)::before{background:#ef4f6a}.pl ol li:nth-child(3)::before{background:#f5a524}.pl ol li:nth-child(4)::before{background:#22b8a0}
+.pl ol li b{display:block;margin-bottom:.25rem;font-size:var(--cds-font-size-body)}
+.pl li span[data-source]{font-weight:700}
+.pl .bar{grid-template-columns:minmax(7rem,12rem) 1fr 5.5rem}
+</style>
+<div class="pl">
+<h1>Returns and failed deliveries</h1>
+<p class="take">Returns and failed deliveries hit <span data-source="r_sum" data-field="problem_lines" id="k0">—</span> of <span data-source="r_sum" data-field="lines" id="k1">—</span> order lines and cost <span data-source="r_sum" data-field="loss" id="k2">—</span> EGP. A failed delivery costs far more on Jumia than on Noon, and one product loses on almost every sale.</p>
+<div class="kpis">
+ <div class="card"><span class="lab">Problem order lines</span><span class="big" data-source="r_sum" data-field="problem_rate" id="k3">—</span></div>
+ <div class="card"><span class="lab">Total loss, EGP</span><span class="big" data-source="r_sum" data-field="loss" id="k4">—</span></div>
+ <div class="card"><span class="lab">Jumia loss, EGP</span><span class="big" data-source="r_sum" data-field="jumia_loss" id="k5">—</span></div>
+ <div class="card"><span class="lab">Noon loss, EGP</span><span class="big" data-source="r_sum" data-field="noon_loss" id="k6">—</span></div>
+</div>
+<div class="grid">
+ <div class="card"><h2>Loss per problem line</h2><p class="note">EGP lost on each affected order line, by platform and type</p><div id="lbars" data-source="r_loss"></div></div>
+ <div class="card"><h2>Products that go wrong most</h2><p class="note">Share of order lines that were returned or failed (products with 12+ lines)</p><div id="pbars" data-source="r_prod"></div></div>
+</div>
+<div class="card"><h2>Findings and decisions</h2>
+<ol>
+ <li><b>Jumia failed deliveries are expensive.</b> Each one costs <span data-source="r_loss" data-where="platform=Jumia&amp;type=Failed delivery" data-field="loss_per_line" id="i1">—</span> EGP on Jumia against <span data-source="r_loss" data-where="platform=Noon&amp;type=Failed delivery" data-field="loss_per_line" id="i2">—</span> on Noon. <i>Decision:</i> confirm the customer's phone and address before shipping Jumia orders, and avoid shipping heavy items there.</li>
+ <li><b>Late returns on Jumia cost the most.</b> A return after settlement costs <span data-source="r_loss" data-where="platform=Jumia&amp;type=Returned after settlement" data-field="loss_per_line" id="i3">—</span> EGP per line. <i>Decision:</i> open a claim for each one and check the returned item's condition.</li>
+ <li><b>One product loses on almost every sale.</b> The portable grill had <span data-source="r_prod" data-where="product=Portable foldable grill" data-field="problem_lines" id="i4">—</span> problem lines out of <span data-source="r_prod" data-where="product=Portable foldable grill" data-field="lines" id="i5">—</span> and no profit. <i>Decision:</i> pause it until the cause is found.</li>
+ <li><b>Money waiting on delivery is small and on time.</b> <span data-source="r_sum" data-field="pending_orders" id="i6">—</span> orders worth <span data-source="r_sum" data-field="pending_value" id="i7">—</span> EGP are awaiting delivery and none is late. <i>Decision:</i> no collection problem; keep the weekly check.</li>
+</ol></div>
+<details><summary>Notes and limits</summary><p>Loss is the absolute net profit of returned, partially returned and failed-delivery lines. Figures combine all accounts and are anonymised. Product names are shortened. Source: the operations reporting database; pending orders are those awaiting delivery today.</p></details>
+</div>
+<script>
+(function(){
+const n=d3.format(','),p=d3.format('.1%');
+const T=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+const ok=id=>dash.data(id).status==='ok'&&dash.data(id).data.length;
+function bars(sel,rows,label,val,fmt,neg){
+ const box=d3.select(sel);box.selectAll('*').remove();const mx=d3.max(rows,val);
+ rows.forEach(d=>{const r=box.append('div').attr('class','bar');r.append('span').text(label(d));
+  r.append('div').append('i').attr('class',neg(d)?'neg':'').style('width',(val(d)/mx*100)+'%');r.append('span').text(fmt(d));});}
+function draw(){
+ if(ok('r_sum')){const s=dash.data('r_sum').data[0];
+  T('k0',n(s.problem_lines));T('k1',n(s.lines));T('k2',n(s.loss));T('k3',p(s.problem_rate));T('k4',n(s.loss));T('k5',n(s.jumia_loss));T('k6',n(s.noon_loss));T('i6',n(s.pending_orders));T('i7',n(s.pending_value));}
+ if(ok('r_loss')){const r=dash.data('r_loss').data.slice().sort((a,b)=>b.loss_per_line-a.loss_per_line);
+  bars('#lbars',r,d=>d.platform+' · '+d.type,d=>d.loss_per_line,d=>n(d.loss_per_line)+' ('+d.lines+')',d=>d.platform==='Jumia');
+  const g=(a,b)=>r.find(x=>x.platform===a&&x.type===b);
+  T('i1',n(g('Jumia','Failed delivery').loss_per_line));T('i2',n(g('Noon','Failed delivery').loss_per_line));T('i3',n(g('Jumia','Returned after settlement').loss_per_line));}
+ if(ok('r_prod')){const r=dash.data('r_prod').data.slice().sort((a,b)=>b.problem_rate-a.problem_rate);
+  bars('#pbars',r,d=>d.product,d=>d.problem_rate,d=>p(d.problem_rate),d=>d.problem_rate>.4);
+  const g=r.find(x=>x.product==='Portable foldable grill');T('i4',g.problem_lines);T('i5',g.lines);}
+}
+dash.onData(draw);
+})();
+</script>
+</div>
+</body></html>
