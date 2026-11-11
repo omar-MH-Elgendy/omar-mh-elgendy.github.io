@@ -1,0 +1,225 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Omar M. ElGendy Portfolio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: dark navy page, hero with a framed portrait on the right, then numbers, services, project cases, skills. Committed single dark look, taken from the saved Pinterest references. */
+:root{
+  --bg:#faf7f1; --bg2:#f1ece2; --panel:#ffffff; --line:#e3dccf; --fg:#1c1912; --muted:#6b665a;
+  --blue:#c9780b; --violet:#2f7f94; --amber:#8a5a0c; --bad:#c4452f; --good:#1f8a5b;
+  --display:'Sora','Segoe UI',system-ui,sans-serif; --body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 1rem/1.6 var(--body);padding-block:1.5rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background-image:radial-gradient(46rem 30rem at 85% 0%,rgba(201,120,11,.20),transparent 70%),radial-gradient(40rem 26rem at 0% 30%,rgba(47,127,148,.14),transparent 70%)}
+.wrap{max-width:68rem;margin-inline:auto;display:flex;flex-direction:column;gap:4rem}
+a{color:var(--blue)}
+a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.15;text-wrap:balance}
+.eyebrow{font:500 .75rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+nav{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.logo{font:700 1.1rem var(--display)}
+.logo b{background:linear-gradient(90deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+nav div{display:flex;gap:1.25rem;font-size:.9rem;flex-wrap:wrap}
+nav a{color:var(--muted);text-decoration:none}nav a:hover{color:var(--fg)}
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:2.5rem;align-items:center}
+@media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}.hero .shot{order:-1;max-width:16rem;margin-inline:auto}}
+.hero h1{font-size:clamp(2.2rem,6.5vw,3.8rem);font-weight:800;letter-spacing:-.03em;margin:.6rem 0 1rem}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);font-size:1.1rem;max-width:36rem;margin:0 0 1.5rem}
+.cta{display:flex;gap:.8rem;flex-wrap:wrap}
+.btn{font:600 .95rem var(--display);padding:.8rem 1.4rem;border-radius:12px;text-decoration:none;color:#fff;background:linear-gradient(90deg,var(--blue),#a85f05);box-shadow:0 8px 28px rgba(201,120,11,.35)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--fg);box-shadow:none}
+.mail{margin-top:1rem;font:400 .85rem var(--mono);color:var(--muted)}.mail span{color:var(--fg);user-select:all}
+.shot{position:relative;aspect-ratio:1/1;border-radius:50%;padding:6px;background:conic-gradient(from 140deg,var(--blue),var(--violet),var(--amber),var(--blue));box-shadow:0 0 70px rgba(201,120,11,.35)}
+.shot .in{width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--bg2);display:flex;align-items:center;justify-content:center}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .ph{font:800 4rem var(--display);color:var(--muted)}
+.badge{position:absolute;font:500 .72rem var(--mono);padding:.35rem .7rem;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
+.badge.a{left:-6%;bottom:14%}.badge.b{right:-4%;top:12%;color:var(--amber)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:1rem}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.2rem}
+.stat b{display:block;font:700 2rem var(--display);font-variant-numeric:tabular-nums}
+.stat:nth-child(1) b{color:var(--blue)}.stat:nth-child(2) b{color:var(--violet)}.stat:nth-child(3) b{color:var(--amber)}.stat:nth-child(4) b{color:var(--good)}
+.stat span{font-size:.85rem;color:var(--muted)}
+.sec{display:flex;flex-direction:column;gap:1.5rem}
+.sec h2{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.25rem;min-width:0}
+.card h3{font-size:1.05rem;margin-bottom:.4rem}.card p{margin:0;color:var(--muted);font-size:.92rem}
+.ico{width:2.4rem;height:2.4rem;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:.8rem;background:rgba(201,120,11,.15);color:var(--blue)}
+.card:nth-child(2) .ico{background:rgba(47,127,148,.16);color:var(--violet)}.card:nth-child(3) .ico{background:rgba(138,90,12,.16);color:var(--amber)}.card:nth-child(4) .ico{background:rgba(31,138,91,.14);color:var(--good)}
+.cases{display:flex;flex-direction:column;gap:1.25rem}
+.case{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:20px;padding:1.6rem;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:1.5rem 2.5rem}
+@media (max-width:760px){.case{grid-template-columns:minmax(0,1fr)}}
+.tag{font:500 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.case h3{font-size:1.35rem;margin:.3rem 0 .6rem}.case p{margin:.4rem 0;color:var(--muted)}
+.kp{display:flex;flex-wrap:wrap;gap:.8rem 1.6rem;margin:1rem 0}
+.kp b{display:block;font:700 1.6rem var(--display);font-variant-numeric:tabular-nums}.kp span{font-size:.78rem;color:var(--muted)}
+.decide{padding:.8rem 1rem;border-radius:12px;background:rgba(201,120,11,.1);border:1px solid rgba(201,120,11,.25);font-size:.93rem}
+.link{display:inline-block;margin-top:1rem;font:600 .95rem var(--display);color:var(--amber);text-decoration:none}
+.side{min-width:0;display:flex;flex-direction:column;gap:.6rem;justify-content:center}
+.bars{display:flex;flex-direction:column;gap:.6rem;font-size:.85rem}
+.row{display:grid;grid-template-columns:4.8rem minmax(0,1fr) 3.2rem;gap:.6rem;align-items:center}
+.row i{display:block;height:.85rem;border-radius:6px;background:linear-gradient(90deg,var(--violet),var(--blue))}
+.row i.hot{background:linear-gradient(90deg,var(--amber),var(--bad))}
+.row span:last-child{text-align:right;font-family:var(--mono)}
+.note{font-size:.78rem;color:var(--muted)}
+.list{margin:0;padding-left:1.1rem;color:var(--muted);font-size:.93rem}.list li{margin:.3rem 0}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{font:500 .82rem var(--mono);padding:.4rem .8rem;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+.tier{display:grid;grid-template-columns:8rem minmax(0,1fr);gap:.8rem;align-items:center}
+@media (max-width:600px){.tier{grid-template-columns:minmax(0,1fr)}}
+.tier>span{font:500 .8rem var(--mono);color:var(--amber)}
+.skills{display:flex;flex-direction:column;gap:1rem}
+.contact{text-align:center;padding:2.5rem 1.5rem;border-radius:24px;background:linear-gradient(135deg,rgba(201,120,11,.25),rgba(47,127,148,.22));border:1px solid var(--line);display:flex;flex-direction:column;gap:1rem;align-items:center}
+.contact h2{font-size:clamp(1.6rem,4vw,2.3rem)}
+.phones{display:grid;gap:.6rem;width:100%;max-width:34rem;text-align:left}
+.ph1{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.6rem .9rem}
+.ph1 .lbl{display:flex;width:2rem;color:var(--amber)}.ph1 .lbl .wa{color:#1f9d55}
+.ph1 .val{font:500 .95rem var(--mono);flex:1;min-width:0;overflow-wrap:anywhere;user-select:all}
+.ph1 button{font:600 .8rem var(--body);padding:.35rem .8rem;border-radius:8px;border:1px solid var(--line);background:var(--bg2);color:var(--fg);cursor:pointer}
+.ph1 a{font:600 .8rem var(--body);color:var(--blue)}
+.ph1 button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.ic-line{display:flex;flex-direction:column;gap:.35rem}.ic-line div{display:flex;align-items:center;gap:.6rem}.ic-line .wa{color:#1f9d55}.ic-line svg{color:var(--amber);flex:none}.ic-line .wa{color:#1f9d55}
+footer{font-size:.85rem;color:var(--muted);text-align:center}
+</style>
+<div class="wrap">
+<nav><span class="logo">Omar M. <b>ElGendy</b></span><div><a href="#work">Work</a><a href="#services">Services</a><a href="#skills">Skills</a><a href="#contact">Contact</a></div></nav>
+
+<section class="hero">
+  <div>
+    <span class="eyebrow">Data &amp; operations analyst · Cairo · remote</span>
+    <h1>Hi, I'm Omar M. ElGendy. I turn marketplace data into <em>decisions</em>.</h1>
+    <p class="lead">I run my own brand on Amazon, Noon, Jumia and Raneen, and I build the reports that show where the money goes. Everything below comes from that live business, with figures anonymised.</p>
+    <div class="cta"><a class="btn" href="#work">See the work</a><a class="btn ghost" href="https://www.linkedin.com/in/omar-mohamed-elgendy" target="_blank" rel="noopener">LinkedIn</a></div>
+    <div class="mail ic-line"><div><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Email" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg><span>omar.mmhussien@outlook.com</span></div><div><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Phone" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg><span>+201114004331</span></div><div><svg class="ic wa" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="WhatsApp" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-4.2A8.5 8.5 0 1112 20.5a8.4 8.4 0 01-4-1z"/><path d="M9 8.5c0 3.3 3.2 6.5 6.5 6.5l1-1.6-2.1-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg><span>+201060028003</span></div></div>
+  </div>
+  <div class="shot">
+    <div class="in"><img src="photo.webp" alt="Portrait of Omar M. ElGendy" width="560" height="560"></div>
+    <span class="badge a">Power BI · SQL · Python</span><span class="badge b">10+ yrs operations</span>
+  </div>
+</section>
+
+<section class="stats" aria-label="Numbers">
+  <div class="stat"><b>866</b><span>marketplace order lines analysed</span></div>
+  <div class="stat"><b>80+</b><span>DAX measures in one model</span></div>
+  <div class="stat"><b>4</b><span>marketplaces run live</span></div>
+  <div class="stat"><b>10+</b><span>years in customer operations</span></div>
+</section>
+
+<section class="sec" id="services">
+  <span class="eyebrow">What I do</span>
+  <h2>Reporting that ends in an action</h2>
+  <div class="grid">
+    <div class="card"><div class="ico" aria-hidden="true">▦</div><h3>Power BI dashboards</h3><p>Star-schema models, DAX measures and row-level security, so each person sees only their own numbers.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">◔</div><h3>Marketplace analytics</h3><p>Profit, fees, returns and payouts across Amazon, Noon, Jumia and Raneen, ending in a clear decision.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">↻</div><h3>Python automation</h3><p>Data loading and checking pipelines that replace the weekly copy and paste.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">⌘</div><h3>SQL data modelling</h3><p>Clean PostgreSQL and Supabase tables that reports can trust.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="work">
+  <span class="eyebrow">Selected work</span>
+  <h2>Four projects from a live business</h2>
+  <div class="cases">
+
+  <article class="case">
+    <div>
+      <span class="tag">Insights report</span>
+      <h3>Where marketplace profit leaks</h3>
+      <p>Returns and failed deliveries took back almost a third of the profit earned on good orders. Jumia returns 29% of gross sales, Noon charges 25% in fees, and the monthly margin fell from 29% to 8%.</p>
+      <div class="kp"><div><b>31%</b><span>of profit lost</span></div><div><b>18,109</b><span>EGP lost on 170 lines</span></div></div>
+      <div class="decide"><b>Decision:</b> pull repeat-return products on Jumia, price Noon items with the fee included, review prices on fast-growing products.</div>
+      <a class="link" href="reports/profit-leakage.html" >Open the report →</a>
+    </div>
+    <div class="side">
+      <span class="eyebrow">Returns as share of gross sales</span>
+      <div class="bars" role="img" aria-label="Returns as share of gross sales: Jumia 29%, Noon 16%, Amazon 4.8%">
+        <div class="row"><span>Jumia</span><i class="hot" style="width:100%"></i><span>29%</span></div>
+        <div class="row"><span>Noon</span><i style="width:55%"></i><span>16%</span></div>
+        <div class="row"><span>Amazon</span><i style="width:17%"></i><span>4.8%</span></div>
+      </div>
+      <span class="note">Bars drawn to scale from the report data.</span>
+    </div>
+  </article>
+
+  <article class="case">
+    <div>
+      <span class="tag">Insights report</span>
+      <h3>Returns and failed deliveries</h3>
+      <p>A failed delivery costs about 132 EGP per order on Jumia and about 15 on Noon. One product had problems on 9 of 13 orders and made no profit. Money waiting on delivery was small and on time.</p>
+      <div class="decide"><b>Decision:</b> confirm customer details before shipping on Jumia, claim every late return, pause the product that loses on most sales.</div>
+      <a class="link" href="reports/returns-and-failed-deliveries.html" >Open the report →</a>
+    </div>
+    <div class="side">
+      <span class="eyebrow">Loss per failed delivery, EGP</span>
+      <div class="bars" role="img" aria-label="Loss per failed delivery in EGP: Jumia 132, Noon 15">
+        <div class="row"><span>Jumia</span><i class="hot" style="width:100%"></i><span>132</span></div>
+        <div class="row"><span>Noon</span><i style="width:11.4%"></i><span>15</span></div>
+      </div>
+      <span class="note">3,558 EGP over 27 lines and 356 EGP over 23 lines.</span>
+    </div>
+  </article>
+
+  <article class="case">
+    <div>
+      <span class="tag">Power BI model</span>
+      <h3>Partner reporting with row-level security</h3>
+      <p>A star-schema model that reports sales, fees, returns, payouts and balances for several partner accounts from one dataset. Each partner opens the same report and sees only their own numbers. A Python pipeline of more than 30 steps loads and checks the data before each refresh.</p>
+      <div class="kp"><div><b>9 + 7</b><span>fact + dimension tables</span></div><div><b>34</b><span>relationships</span></div><div><b>80+</b><span>DAX measures</span></div><div><b>3</b><span>security roles</span></div></div>
+      <div class="decide"><b>Scope:</b> model, security roles and load pipeline built end to end. Screens available on request.</div>
+    </div>
+    <div class="side">
+      <span class="eyebrow">What the model covers</span>
+      <ul class="list"><li>Orders, fees and return lines per marketplace</li><li>Payouts and transfers against what is owed</li><li>Pending money by age</li><li>Roles that limit each partner to their own account</li></ul>
+    </div>
+  </article>
+
+  <article class="case">
+    <div>
+      <span class="tag">Case study</span>
+      <h3>Redesign of an operations reporting portal</h3>
+      <p>The portal had 25 pages, five different figures for the same balance and admin tools mixed in with partner pages. I audited every page, wrote the specification for each partner view and built an interactive prototype with a date-range calendar, drill-down tables and CSV export, using sample data.</p>
+      <div class="kp"><div><b>25 → 7</b><span>pages after consolidation</span></div><div><b>5 → 1</b><span>figures for one balance</span></div></div>
+      <div class="decide"><b>Status:</b> redesign specified and prototyped; the first text and grouping fixes are in progress.</div>
+    </div>
+    <div class="side">
+      <span class="eyebrow">Audit findings</span>
+      <ul class="list"><li>Duplicate pages for the same question</li><li>No charts on the main pages</li><li>Inconsistent labels for one calculation</li><li>An inbox of 82 items with no priority</li></ul>
+    </div>
+  </article>
+  </div>
+</section>
+
+<section class="sec" id="skills">
+  <span class="eyebrow">Toolbox</span>
+  <h2>What I work with</h2>
+  <div class="skills">
+    <div class="tier"><span>Reporting</span><div class="chips"><span class="chip">Power BI</span><span class="chip">DAX</span><span class="chip">Row-level security</span><span class="chip">Excel</span></div></div>
+    <div class="tier"><span>Data</span><div class="chips"><span class="chip">SQL</span><span class="chip">PostgreSQL</span><span class="chip">Supabase</span><span class="chip">Python ETL</span><span class="chip">APIs</span><span class="chip">Web scraping</span></div></div>
+    <div class="tier"><span>Operations</span><div class="chips"><span class="chip">Amazon</span><span class="chip">Noon</span><span class="chip">Jumia</span><span class="chip">Raneen</span><span class="chip">Returns and payouts</span></div></div>
+    <div class="tier"><span>People</span><div class="chips"><span class="chip">Trained 11 new-hire teams at e&amp; Egypt</span><span class="chip">Foreign clients at Tabby</span></div></div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <span class="eyebrow">Available now</span>
+  <h2>Have data that needs to turn into a decision?</h2>
+  <div class="cta"><a class="btn" href="https://www.linkedin.com/in/omar-mohamed-elgendy" target="_blank" rel="noopener">Message me on LinkedIn</a></div>
+  <div class="phones">
+    <div class="ph1"><span class="lbl"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Email" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></span><span class="val">omar.mmhussien@outlook.com</span><button type="button" data-copy="omar.mmhussien@outlook.com">Copy</button></div>
+    <div class="ph1"><span class="lbl"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Phone" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></span><span class="val">+201114004331</span><button type="button" data-copy="+201114004331">Copy</button></div>
+    <div class="ph1"><span class="lbl"><svg class="ic wa" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="WhatsApp" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-4.2A8.5 8.5 0 1112 20.5a8.4 8.4 0 01-4-1z"/><path d="M9 8.5c0 3.3 3.2 6.5 6.5 6.5l1-1.6-2.1-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg></span><span class="val">+201060028003</span><button type="button" data-copy="+201060028003">Copy</button><a href="https://wa.me/201060028003" target="_blank" rel="noopener">Open chat</a></div>
+  </div>
+</section>
+<footer>Earlier: Uber Egypt (2014–2019), e&amp; Egypt (2021–2025), Tabby (2025–2026). Google Data Analytics certificate. B.A., Ain Shams University.</footer>
+</div>
+<script>
+document.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',function(){
+  var v=b.getAttribute('data-copy'),row=b.parentNode.querySelector('.val');
+  function sel(){var r=document.createRange();r.selectNodeContents(row);var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected';}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(function(){b.textContent='Copied'},sel)}else{sel()}
+  setTimeout(function(){b.textContent='Copy'},1800);});});
+</script>
+</html>
