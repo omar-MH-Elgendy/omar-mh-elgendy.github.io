@@ -91,7 +91,7 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
   <div>
     <span class="eyebrow">Data &amp; operations analyst · Remote · worldwide</span>
     <h1>Hi, I'm Omar Mohammed Elgendy. I turn marketplace data into <em>decisions</em>.</h1>
-    <p class="lead">I run my own brand on Amazon, Noon, Jumia and Raneen, and I build the reports that show where the money goes. Everything below comes from that live business, with figures anonymised.</p>
+    <p class="lead">Ten years in customer operations, now building data products for a live e-commerce business: a PostgreSQL warehouse, a Power BI report, a partner portal with database-enforced access, and the decisions they lead to. Everything below is my own work, with names removed.</p>
     <div class="cta"><a class="btn" href="#work">See the work</a><a class="btn ghost" href="https://www.linkedin.com/in/omar-mohamed-elgendy" target="_blank" rel="noopener">LinkedIn</a></div>
     <div class="mail ic-line"><div><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Email" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg><span>omar.mmhussien@outlook.com</span></div><div><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Phone" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg><span>+201114004331</span></div><div><svg class="ic wa" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="WhatsApp" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-4.2A8.5 8.5 0 1112 20.5a8.4 8.4 0 01-4-1z"/><path d="M9 8.5c0 3.3 3.2 6.5 6.5 6.5l1-1.6-2.1-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg><span>+201060028003</span></div></div>
   </div>
@@ -121,7 +121,7 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
 
 <section class="sec" id="work">
   <span class="eyebrow">Selected work</span>
-  <h2>Four projects from a live business</h2>
+  <h2>Selected projects from a live business</h2>
   <div class="cases">
 
   <article class="case">
@@ -164,6 +164,49 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
 
   <article class="case">
     <div>
+      <span class="tag">Flagship · full-stack data product</span>
+      <h3>Partner reporting portal with database-enforced isolation</h3>
+      <p>Partners used to get emails, PDFs and spreadsheets that drifted apart. I built a portal where each partner logs in and sees only their own orders, returns, claims, payouts and statements. The database enforces who sees what, and the daily sync is checked against the source to the cent before it goes live.</p>
+      <div class="kp"><div><b>7</b><span>report tables published</span></div><div><b>0</b><span>raw or finance tables exposed</span></div><div><b>Auto</b><span>isolation test on each deploy</span></div></div>
+      <div class="decide"><b>Why it matters:</b> one definition per number, access that can be switched off in one command, and a sync that never replaces good data with bad.</div>
+      <a class="link" href="reports/portal-case-study.html">Open the case study →</a>
+    </div>
+    <div class="side"><span class="eyebrow">Built end to end</span><ul class="list"><li>Row-level security in Supabase</li><li>Python sync with reconciliation</li><li>React, TypeScript, Vercel</li><li>Runbook for setup, access and shutdown</li></ul></div>
+  </article>
+
+  <article class="case">
+    <div>
+      <span class="tag">Internal tool</span>
+      <h3>Control Center: an approvals app for daily operations</h3>
+      <p>Everything that needs my decision arrives as a card: the issue, the evidence, a free-text box for my reasoning and one button to execute. It works on phone and PC, and a scheduled dispatcher passes approved items to my coding assistant so fixes do not wait for me to copy messages around.</p>
+      <div class="decide"><b>Status:</b> in daily use; moving to hosted deployment so a future hire can use it too.</div>
+    </div>
+    <div class="side"><span class="eyebrow">Design choices</span><ul class="list"><li>Decisions as cards, not spreadsheets</li><li>Reasoning captured with each approval</li><li>Reports in the portal, decisions in the app</li></ul></div>
+  </article>
+
+  <article class="case">
+    <div>
+      <span class="tag">Database case study</span>
+      <h3>A reporting database for four marketplace accounts</h3>
+      <p>PostgreSQL with 12 schemas, 235 tables and 114 views: raw imports, a clean core model, five ledgers, and reporting views that feed the dashboards and the partner portal. Real monthly profit and loss-making products are shown, with names removed.</p>
+      <div class="kp"><div><b>235</b><span>tables</span></div><div><b>114</b><span>views</span></div><div><b>109</b><span>foreign keys</span></div></div>
+      <a class="link" href="reports/db-case-study.html">Open the case study →</a>
+    </div>
+    <div class="side"><span class="eyebrow">Layers</span><ul class="list"><li>raw → core / ref</li><li>finance, ops, pricing, ads</li><li>reporting and BI views</li><li>portal with row-level security</li></ul></div>
+  </article>
+
+  <article class="case">
+    <div>
+      <span class="tag">Power BI report</span>
+      <h3>A partner-facing Power BI report on a live database</h3>
+      <p>Thirteen pages on a star schema with 80 DAX measures in 10 folders. Screens, model view and selected DAX are on the page, anonymized.</p>
+      <a class="link" href="reports/bi-case-study.html">Open the case study →</a>
+    </div>
+    <div class="side"><span class="eyebrow">Inside</span><ul class="list"><li>Month-over-month with DATEADD</li><li>Waterfall from a disconnected table</li><li>SVG data bars in measures</li></ul></div>
+  </article>
+
+  <article class="case">
+    <div>
       <span class="tag">Power BI model</span>
       <h3>Partner reporting with row-level security</h3>
       <p>A star-schema model that reports sales, fees, returns, payouts and balances for several partner accounts from one dataset. Each partner opens the same report and sees only their own numbers. A Python pipeline of more than 30 steps loads and checks the data before each refresh.</p>
@@ -190,6 +233,29 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
     </div>
   </article>
   </div>
+</section>
+
+<section class="sec" id="also">
+  <span class="eyebrow">Also built</span>
+  <h2>Smaller tools for real users</h2>
+  <div class="grid">
+    <div class="card"><div class="ico" aria-hidden="true">▦</div><h3>Glass cutting optimiser</h3><p>For a glass installer: enter job sizes and sheet sizes, get a cutting layout with the least waste, the leftovers and a price for the job. Delivered as a demo first, sold as a one-time licence with a month of changes.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">▤</div><h3>Contract pricing app for a glass workshop</h3><p>Installable web app that prices jobs and prepares the contract message, deployed on Vercel.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">₪</div><h3>Payroll and attendance workbook</h3><p>Bilingual Excel system for five employees: attendance, withdrawals, penalties, commissions and salary, all formula-driven with no manual entry. Generated by Python build scripts and tested before use.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">⛁</div><h3>Fulfilment ERP data model</h3><p>A 24-table PostgreSQL design where stock is calculated only from an event-sourced movements table, with commission and pricing rules decoded from the original Excel system.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">↻</div><h3>Marketplace automation</h3><p>Python and Playwright pipelines for listing, pricing and image preparation across four marketplaces, with an approval queue before anything goes live.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="how">
+  <span class="eyebrow">How I work</span>
+  <h2>What you can expect from me</h2>
+  <ul class="list">
+    <li><b>I start from the decision.</b> Every report on this page ends with what to do, not only what happened.</li>
+    <li><b>I check the numbers.</b> Totals are reconciled to the source, and I keep a data-quality page in the report itself.</li>
+    <li><b>I use AI openly.</b> I understand everything I build and could build it on my own. I use AI tools to save time and effort and raise my output; the questions, rules, structure and checks are mine, and I can explain every query and measure in these projects.</li>
+    <li><b>I protect data.</b> Names are removed from public material, access is limited by the database, and credentials never go into code.</li>
+  </ul>
 </section>
 
 <section class="sec" id="skills">

@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case study: A layered PostgreSQL warehouse for a multi-account marketplace business</title>
+<style>
+  :root{--ink:#1d2433;--muted:#5b6475;--line:#e3e6ec;--bg:#faf8f4;--card:#fff;--accent:#1f5eff;--warn:#b4570a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+  a{color:var(--accent)}
+  h1{font-size:30px;line-height:1.25;margin:8px 0 12px}
+  h2{font-size:22px;margin:44px 0 10px;padding-top:8px;border-top:1px solid var(--line)}
+  h3{font-size:17px;margin:24px 0 6px}
+  p{margin:10px 0}
+  .lead{font-size:18px;color:var(--muted)}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:14px;color:var(--muted);margin:16px 0 8px}
+  .meta b{color:var(--ink)}
+  .note{border-left:4px solid var(--warn);background:#fff8ef;padding:10px 14px;border-radius:0 8px 8px 0;font-size:15px}
+  pre{background:#101626;color:#e8ecf5;padding:14px 16px;border-radius:10px;overflow:auto;font:13.5px/1.55 ui-monospace,Consolas,monospace;direction:ltr;text-align:left}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:.92em}
+  table{border-collapse:collapse;width:100%;font-size:15px;margin:12px 0}
+  th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f1f3f8;font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .stat b{display:block;font-size:26px}
+  .stat span{font-size:13.5px;color:var(--muted)}
+  .erd{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .erd{width:96vw;max-width:2500px;position:relative;left:50%;transform:translateX(-50%);max-height:80vh;overflow:auto}
+  .erd svg{display:block;width:var(--w,100%);height:auto}
+  .erdbar{display:flex;gap:8px;margin:6px 0;align-items:center;font-size:14px}
+  .erdbar button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 12px;cursor:pointer;font:inherit}
+  .tag{display:inline-block;background:#eaf0ff;color:#1b3fa6;border-radius:999px;padding:2px 10px;font-size:13px;margin:2px 4px 2px 0}
+</style>
+</head>
+<body>
+<main>
+
+<p><a href="../index.html">&larr; Back to portfolio</a></p>
+<h1>A layered PostgreSQL warehouse: one source of truth for sales, returns and supplier balances</h1>
+<p class="lead">A database I designed and run for a real e-commerce operation across Amazon, Noon and Jumia. Data flows one way, from raw marketplace feeds to ledgers to reports, so every number in every dashboard comes from the same place.</p>
+
+<div class="meta">
+  <span><b>Role:</b> sole designer and owner (business rules, schema, reporting layer)</span>
+  <span><b>Stack:</b> PostgreSQL, SQL, Python, Power BI</span>
+  <span><b>Status:</b> in daily use</span>
+</div>
+<p><span class="tag">Data modelling</span><span class="tag">Layered schemas</span><span class="tag">SQL views</span><span class="tag">Reconciliation</span><span class="tag">Power BI semantic layer</span></p>
+
+<div class="note"><b>How this was built.</b> The business rules, the data model and the decisions are mine; they come from running these accounts every day. I used an AI assistant to speed up implementation (writing and moving scripts, migrating part of the data to a hosted database for the partner portal). Account and supplier names are anonymised in this page.</div>
+
+<div class="grid" style="margin-top:18px">
+  <div class="stat"><b>12</b><span>schemas, organised in layers</span></div>
+  <div class="stat"><b>235</b><span>tables (counted in the live database)</span></div>
+  <div class="stat"><b>114</b><span>views, 53 of them in the reporting layer</span></div>
+  <div class="stat"><b>109</b><span>declared foreign-key constraints</span></div>
+</div>
+
+<h2>The problem</h2>
+<p>Three seller accounts on three marketplaces produced three kinds of numbers that never matched: what the marketplace says it paid, what the sales report says was sold, and what I owe the supplier. A return could be counted as lost revenue in one file and ignored in another, and a failed delivery still carries the supplier's handling fee. Nobody could answer "what did we really earn on this product?" with confidence.</p>
+
+<h2>Architecture: data moves one way</h2>
+<p>Raw files and API pulls land untouched, get unified into core tables, feed the ledgers, and only then reach reports. A page or script may read the ledger or reporting layers, never the raw layer.</p>
+<table>
+  <tr><th>Layer</th><th>Schema</th><th>What lives there</th></tr>
+  <tr><td>Raw</td><td><code>raw</code></td><td>Marketplace files and API responses exactly as received</td></tr>
+  <tr><td>Unified</td><td><code>core</code>, <code>ref</code></td><td>Orders, listings, costs, claims, suppliers; lookup tables (platforms, statuses, return conditions)</td></tr>
+  <tr><td>Money</td><td><code>finance</code></td><td>Marketplace transactions and settlements, supplier ledger, owner share, period closings</td></tr>
+  <tr><td>Operations</td><td><code>ops</code></td><td>Task queue, job state, approval items, alerts, audit trail of automated actions</td></tr>
+  <tr><td>Pricing and ads</td><td><code>pricing</code>, <code>ads</code></td><td>Fee rules, price targets, campaign data</td></tr>
+  <tr><td>Reporting</td><td><code>reporting</code>, <code>bi</code></td><td>Read-only views (order profit, returns, profit waterfall) that Power BI reads</td></tr>
+  <tr><td>Display</td><td><code>portal</code></td><td>Read-only copy with row-level security, so each partner sees only their own account</td></tr>
+</table>
+
+<h2>Five ledgers, one rule</h2>
+<p>I wrote the business down as five ledgers and made one rule: <b>every figure in every report must be derived from these ledgers only</b>, through shared views. No dashboard may calculate "sales" or "returns" its own way.</p>
+<table>
+  <tr><th>Ledger</th><th>What it records</th><th>Key decision</th></tr>
+  <tr><td>Sales</td><td>Orders that were actually shipped</td><td>Cancelled-before-shipping orders appear nowhere. Sales date = order date, even if settled later.</td></tr>
+  <tr><td>Purchases</td><td>Goods cost + the supplier's handling fee, per shipped order</td><td>The handling fee is charged on every shipped order, including returns and failed deliveries, and is never refunded.</td></tr>
+  <tr><td>Returns</td><td>Returns, failed deliveries, item condition, claims</td><td>Only an item proven to be returned in good condition (photo or video evidence) credits the supplier balance.</td></tr>
+  <tr><td>Marketplace money</td><td>Fees, settlements, payouts to the bank</td><td>Every amount is flagged <code>ACTUAL</code> (settled) or <code>ESTIMATED</code>, so estimates never mix with real money.</td></tr>
+  <tr><td>Transfers</td><td>Payments to the supplier, the owner's share, marketplace compensation</td><td>Compensation reduces a loss; it is never counted as sales.</td></tr>
+</table>
+
+<h2>Entity relationship diagram (from the live database)</h2>
+<p><i>Note: the full database has 235 tables, so I simplified the architecture with the help of AI to understand it better. The diagram below shows the 18 core tables with every column exactly as it exists in the database (use the zoom buttons).</i></p>
+<p>Generated from the live database catalog: real tables, real columns and types, and the foreign keys declared in it. It shows the core of the model: marketplace feed &rarr; unified orders &rarr; order lines, returns and claims &rarr; the money and supplier ledgers.</p>
+<div class="erdbar"><button onclick="erdZ('100%')">Fit to screen</button><button onclick="erdZ('1500px')">Zoom 60%</button><button onclick="erdZ('2400px')">Full size</button><span style="color:#667085">Scroll inside the diagram to pan.</span></div>
+<div class="erd" id="erd"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1224" font-family="ui-monospace,Consolas,monospace">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#667085"/></marker></defs>
+<rect width="2400" height="1224" fill="#fff"/>
+<path d="M700 37.0 C655.0 37.0 655.0 135.0 610 135.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M700 37.0 C655.0 37.0 655.0 233.0 610 233.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M950 473.0 C990 473.0 990 37.0 950 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1040 37.0 C995.0 37.0 995.0 37.0 950 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1040 37.0 C995.0 37.0 995.0 473.0 950 473.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1380 360.0 C1335.0 360.0 1335.0 37.0 1290 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1630 360.0 C1670 360.0 1670 37.0 1630 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1380 37.0 C1335.0 37.0 1335.0 37.0 1290 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1630 37.0 C1670 37.0 1670 998.0 1630 998.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M700 225.0 C655.0 225.0 655.0 391.0 610 391.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M700 225.0 C655.0 225.0 655.0 233.0 610 233.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M270 285.0 C310 285.0 310 37.0 270 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M270 285.0 C485.0 285.0 485.0 37.0 700 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1720 37.0 C1335.0 37.0 1335.0 473.0 950 473.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1720 37.0 C1505.0 37.0 1505.0 37.0 1290 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1720 37.0 C1675.0 37.0 1675.0 360.0 1630 360.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1720 37.0 C1675.0 37.0 1675.0 37.0 1630 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1970 37.0 C2010 37.0 2010 450.0 1970 450.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1720 37.0 C995.0 37.0 995.0 285.0 270 285.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1720 450.0 C995.0 450.0 995.0 285.0 270 285.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1970 698.0 C2010 698.0 2010 450.0 1970 450.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1720 698.0 C1505.0 698.0 1505.0 37.0 1290 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M1970 698.0 C2010 698.0 2010 37.0 1970 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M2060 37.0 C1505.0 37.0 1505.0 473.0 950 473.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M2060 375.0 C1335.0 375.0 1335.0 233.0 610 233.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<path d="M2060 375.0 C1675.0 375.0 1675.0 37.0 1290 37.0" fill="none" stroke="#667085" stroke-opacity=".6" stroke-width="1.3" marker-end="url(#a)"/>
+<rect x="20" y="20" width="250" height="222" rx="7" fill="#fff" stroke="#8a6d3b" stroke-width="1.6"/>
+<rect x="20" y="20" width="250" height="34" rx="7" fill="#8a6d3b"/><rect x="20" y="46" width="250" height="8" fill="#8a6d3b"/>
+<text x="29" y="33" font-size="10.5" fill="#fff" fill-opacity=".85">raw</text>
+<text x="29" y="47" font-size="13" font-weight="700" fill="#fff">raw_files</text>
+<text x="28" y="65" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="48" y="65" font-size="11" fill="#1d2433" font-weight="700">file_id</text>
+<text x="262" y="65" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="48" y="80" font-size="11" fill="#1d2433">source</text>
+<text x="262" y="80" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="95" font-size="11" fill="#1d2433">account_key</text>
+<text x="262" y="95" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="110" font-size="11" fill="#1d2433">file_name</text>
+<text x="262" y="110" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="125" font-size="11" fill="#1d2433">file_path</text>
+<text x="262" y="125" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="140" font-size="11" fill="#1d2433">file_sha256</text>
+<text x="262" y="140" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="155" font-size="11" fill="#1d2433">size_bytes</text>
+<text x="262" y="155" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="48" y="170" font-size="11" fill="#1d2433">data_row_count</text>
+<text x="262" y="170" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="48" y="185" font-size="11" fill="#1d2433">rows_loaded</text>
+<text x="262" y="185" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="48" y="200" font-size="11" fill="#1d2433">status</text>
+<text x="262" y="200" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="215" font-size="11" fill="#1d2433">note</text>
+<text x="262" y="215" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="230" font-size="11" fill="#1d2433">loaded_at</text>
+<text x="262" y="230" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="20" y="268" width="250" height="432" rx="7" fill="#fff" stroke="#8a6d3b" stroke-width="1.6"/>
+<rect x="20" y="268" width="250" height="34" rx="7" fill="#8a6d3b"/><rect x="20" y="294" width="250" height="8" fill="#8a6d3b"/>
+<text x="29" y="281" font-size="10.5" fill="#fff" fill-opacity=".85">raw</text>
+<text x="29" y="295" font-size="13" font-weight="700" fill="#fff">noon_transactions</text>
+<text x="28" y="313" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="48" y="313" font-size="11" fill="#1d2433" font-weight="700">raw_id</text>
+<text x="262" y="313" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="28" y="328" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="48" y="328" font-size="11" fill="#1d2433">file_id</text>
+<text x="262" y="328" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="28" y="343" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="48" y="343" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="262" y="343" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="48" y="358" font-size="11" fill="#1d2433">natural_key_md5</text>
+<text x="262" y="358" font-size="10" fill="#667085" text-anchor="end">bpchar</text>
+<text x="48" y="373" font-size="11" fill="#1d2433">contract</text>
+<text x="262" y="373" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="388" font-size="11" fill="#1d2433">contract_title</text>
+<text x="262" y="388" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="403" font-size="11" fill="#1d2433">reference_nr</text>
+<text x="262" y="403" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="418" font-size="11" fill="#1d2433">order_nr</text>
+<text x="262" y="418" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="433" font-size="11" fill="#1d2433">item_nr</text>
+<text x="262" y="433" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="448" font-size="11" fill="#1d2433">order_date_txt</text>
+<text x="262" y="448" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="463" font-size="11" fill="#1d2433">transaction_date</text>
+<text x="262" y="463" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="48" y="478" font-size="11" fill="#1d2433">title</text>
+<text x="262" y="478" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="493" font-size="11" fill="#1d2433">noon_sku</text>
+<text x="262" y="493" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="508" font-size="11" fill="#1d2433">partner_sku</text>
+<text x="262" y="508" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="523" font-size="11" fill="#1d2433">transaction_type</text>
+<text x="262" y="523" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="538" font-size="11" fill="#1d2433">currency</text>
+<text x="262" y="538" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="48" y="553" font-size="11" fill="#1d2433">net_proceeds</text>
+<text x="262" y="553" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="568" font-size="11" fill="#1d2433">referral_fee</text>
+<text x="262" y="568" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="583" font-size="11" fill="#1d2433">fulfillment_logistics_fee</text>
+<text x="262" y="583" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="598" font-size="11" fill="#1d2433">shipping_credits</text>
+<text x="262" y="598" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="613" font-size="11" fill="#1d2433">other_order_fees</text>
+<text x="262" y="613" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="628" font-size="11" fill="#1d2433">order_subsidies</text>
+<text x="262" y="628" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="643" font-size="11" fill="#1d2433">non_order_fees</text>
+<text x="262" y="643" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="658" font-size="11" fill="#1d2433">non_order_subsidies</text>
+<text x="262" y="658" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="673" font-size="11" fill="#1d2433">others_amount</text>
+<text x="262" y="673" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="48" y="688" font-size="11" fill="#1d2433">total</text>
+<text x="262" y="688" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<rect x="360" y="20" width="250" height="72" rx="7" fill="#fff" stroke="#6b7280" stroke-width="1.6"/>
+<rect x="360" y="20" width="250" height="34" rx="7" fill="#6b7280"/><rect x="360" y="46" width="250" height="8" fill="#6b7280"/>
+<text x="369" y="33" font-size="10.5" fill="#fff" fill-opacity=".85">ref</text>
+<text x="369" y="47" font-size="13" font-weight="700" fill="#fff">platforms</text>
+<text x="368" y="65" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="388" y="65" font-size="11" fill="#1d2433" font-weight="700">platform_id</text>
+<text x="602" y="65" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="388" y="80" font-size="11" fill="#1d2433">name</text>
+<text x="602" y="80" font-size="10" fill="#667085" text-anchor="end">text</text>
+<rect x="360" y="118" width="250" height="72" rx="7" fill="#fff" stroke="#1f5eff" stroke-width="1.6"/>
+<rect x="360" y="118" width="250" height="34" rx="7" fill="#1f5eff"/><rect x="360" y="144" width="250" height="8" fill="#1f5eff"/>
+<text x="369" y="131" font-size="10.5" fill="#fff" fill-opacity=".85">public</text>
+<text x="369" y="145" font-size="13" font-weight="700" fill="#fff">dim_accounts</text>
+<text x="368" y="163" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="388" y="163" font-size="11" fill="#1d2433" font-weight="700">account_id</text>
+<text x="602" y="163" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="388" y="178" font-size="11" fill="#1d2433">account_name</text>
+<text x="602" y="178" font-size="10" fill="#667085" text-anchor="end">text</text>
+<rect x="360" y="216" width="250" height="132" rx="7" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+<rect x="360" y="216" width="250" height="34" rx="7" fill="#0f766e"/><rect x="360" y="242" width="250" height="8" fill="#0f766e"/>
+<text x="369" y="229" font-size="10.5" fill="#fff" fill-opacity=".85">core</text>
+<text x="369" y="243" font-size="13" font-weight="700" fill="#fff">suppliers</text>
+<text x="368" y="261" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="388" y="261" font-size="11" fill="#1d2433" font-weight="700">supplier_id</text>
+<text x="602" y="261" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="388" y="276" font-size="11" fill="#1d2433">name</text>
+<text x="602" y="276" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="291" font-size="11" fill="#1d2433">status</text>
+<text x="602" y="291" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="306" font-size="11" fill="#1d2433">phone</text>
+<text x="602" y="306" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="321" font-size="11" fill="#1d2433">notes</text>
+<text x="602" y="321" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="336" font-size="11" fill="#1d2433">created_at</text>
+<text x="602" y="336" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="360" y="374" width="250" height="207" rx="7" fill="#fff" stroke="#1f5eff" stroke-width="1.6"/>
+<rect x="360" y="374" width="250" height="34" rx="7" fill="#1f5eff"/><rect x="360" y="400" width="250" height="8" fill="#1f5eff"/>
+<text x="369" y="387" font-size="10.5" fill="#fff" fill-opacity=".85">public</text>
+<text x="369" y="401" font-size="13" font-weight="700" fill="#fff">dim_products_master</text>
+<text x="368" y="419" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="388" y="419" font-size="11" fill="#1d2433" font-weight="700">internal_code</text>
+<text x="602" y="419" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="434" font-size="11" fill="#1d2433">product_name_ar</text>
+<text x="602" y="434" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="449" font-size="11" fill="#1d2433">product_name_en</text>
+<text x="602" y="449" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="464" font-size="11" fill="#1d2433">category</text>
+<text x="602" y="464" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="479" font-size="11" fill="#1d2433">brand</text>
+<text x="602" y="479" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="494" font-size="11" fill="#1d2433">created_at</text>
+<text x="602" y="494" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="388" y="509" font-size="11" fill="#1d2433">updated_at</text>
+<text x="602" y="509" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="388" y="524" font-size="11" fill="#1d2433">market_availability</text>
+<text x="602" y="524" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="539" font-size="11" fill="#1d2433">market_availability_set_at</text>
+<text x="602" y="539" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="388" y="554" font-size="11" fill="#1d2433">market_availability_set_by</text>
+<text x="602" y="554" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="388" y="569" font-size="11" fill="#1d2433">review_status</text>
+<text x="602" y="569" font-size="10" fill="#667085" text-anchor="end">text</text>
+<rect x="700" y="20" width="250" height="162" rx="7" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+<rect x="700" y="20" width="250" height="34" rx="7" fill="#0f766e"/><rect x="700" y="46" width="250" height="8" fill="#0f766e"/>
+<text x="709" y="33" font-size="10.5" fill="#fff" fill-opacity=".85">core</text>
+<text x="709" y="47" font-size="13" font-weight="700" fill="#fff">seller_accounts</text>
+<text x="708" y="65" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="728" y="65" font-size="11" fill="#1d2433" font-weight="700">seller_account_id</text>
+<text x="942" y="65" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="708" y="80" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="80" font-size="11" fill="#1d2433">account_id</text>
+<text x="942" y="80" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="708" y="95" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="95" font-size="11" fill="#1d2433">supplier_id</text>
+<text x="942" y="95" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="708" y="110" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="110" font-size="11" fill="#1d2433">platform_id</text>
+<text x="942" y="110" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="728" y="125" font-size="11" fill="#1d2433">role</text>
+<text x="942" y="125" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="140" font-size="11" fill="#1d2433">connection_status</text>
+<text x="942" y="140" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="155" font-size="11" fill="#1d2433">external_project_code</text>
+<text x="942" y="155" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="170" font-size="11" fill="#1d2433">created_at</text>
+<text x="942" y="170" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="700" y="208" width="250" height="222" rx="7" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+<rect x="700" y="208" width="250" height="34" rx="7" fill="#0f766e"/><rect x="700" y="234" width="250" height="8" fill="#0f766e"/>
+<text x="709" y="221" font-size="10.5" fill="#fff" fill-opacity=".85">core</text>
+<text x="709" y="235" font-size="13" font-weight="700" fill="#fff">product_costs</text>
+<text x="708" y="253" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="728" y="253" font-size="11" fill="#1d2433" font-weight="700">cost_id</text>
+<text x="942" y="253" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="708" y="268" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="268" font-size="11" fill="#1d2433">internal_code</text>
+<text x="942" y="268" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="708" y="283" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="283" font-size="11" fill="#1d2433">account_id</text>
+<text x="942" y="283" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="708" y="298" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="298" font-size="11" fill="#1d2433">supplier_id</text>
+<text x="942" y="298" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="728" y="313" font-size="11" fill="#1d2433">purchase_price</text>
+<text x="942" y="313" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="728" y="328" font-size="11" fill="#1d2433">price_source</text>
+<text x="942" y="328" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="343" font-size="11" fill="#1d2433">effective_from</text>
+<text x="942" y="343" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="728" y="358" font-size="11" fill="#1d2433">effective_to</text>
+<text x="942" y="358" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="728" y="373" font-size="11" fill="#1d2433">observed_on</text>
+<text x="942" y="373" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="728" y="388" font-size="11" fill="#1d2433">is_current</text>
+<text x="942" y="388" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="728" y="403" font-size="11" fill="#1d2433">note</text>
+<text x="942" y="403" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="418" font-size="11" fill="#1d2433">loaded_at</text>
+<text x="942" y="418" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="700" y="456" width="250" height="342" rx="7" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+<rect x="700" y="456" width="250" height="34" rx="7" fill="#0f766e"/><rect x="700" y="482" width="250" height="8" fill="#0f766e"/>
+<text x="709" y="469" font-size="10.5" fill="#fff" fill-opacity=".85">core</text>
+<text x="709" y="483" font-size="13" font-weight="700" fill="#fff">orders</text>
+<text x="708" y="501" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="728" y="501" font-size="11" fill="#1d2433" font-weight="700">order_id</text>
+<text x="942" y="501" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="708" y="516" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="516" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="942" y="516" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="708" y="531" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="728" y="531" font-size="11" fill="#1d2433">platform_id</text>
+<text x="942" y="531" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="728" y="546" font-size="11" fill="#1d2433">external_order_id</text>
+<text x="942" y="546" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="561" font-size="11" fill="#1d2433">order_date_local</text>
+<text x="942" y="561" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="728" y="576" font-size="11" fill="#1d2433">order_date_utc</text>
+<text x="942" y="576" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="728" y="591" font-size="11" fill="#1d2433">order_status</text>
+<text x="942" y="591" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="606" font-size="11" fill="#1d2433">order_status_norm</text>
+<text x="942" y="606" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="621" font-size="11" fill="#1d2433">financial_status</text>
+<text x="942" y="621" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="636" font-size="11" fill="#1d2433">sales_classification</text>
+<text x="942" y="636" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="651" font-size="11" fill="#1d2433">is_counted</text>
+<text x="942" y="651" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="728" y="666" font-size="11" fill="#1d2433">excluded_reason</text>
+<text x="942" y="666" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="681" font-size="11" fill="#1d2433">currency</text>
+<text x="942" y="681" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="728" y="696" font-size="11" fill="#1d2433">subtotal</text>
+<text x="942" y="696" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="728" y="711" font-size="11" fill="#1d2433">discount</text>
+<text x="942" y="711" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="728" y="726" font-size="11" fill="#1d2433">shipping</text>
+<text x="942" y="726" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="728" y="741" font-size="11" fill="#1d2433">total</text>
+<text x="942" y="741" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="728" y="756" font-size="11" fill="#1d2433">item_count</text>
+<text x="942" y="756" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="728" y="771" font-size="11" fill="#1d2433">created_at</text>
+<text x="942" y="771" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="728" y="786" font-size="11" fill="#1d2433">updated_at</text>
+<text x="942" y="786" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="1040" y="20" width="250" height="747" rx="7" fill="#fff" stroke="#1f5eff" stroke-width="1.6"/>
+<rect x="1040" y="20" width="250" height="34" rx="7" fill="#1f5eff"/><rect x="1040" y="46" width="250" height="8" fill="#1f5eff"/>
+<text x="1049" y="33" font-size="10.5" fill="#fff" fill-opacity=".85">public</text>
+<text x="1049" y="47" font-size="13" font-weight="700" fill="#fff">fact_orders</text>
+<text x="1048" y="65" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="1068" y="65" font-size="11" fill="#1d2433" font-weight="700">order_row_id</text>
+<text x="1282" y="65" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1048" y="80" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1068" y="80" font-size="11" fill="#1d2433">account_id</text>
+<text x="1282" y="80" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1068" y="95" font-size="11" fill="#1d2433">platform</text>
+<text x="1282" y="95" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="110" font-size="11" fill="#1d2433">order_number</text>
+<text x="1282" y="110" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="125" font-size="11" fill="#1d2433">seller_sku</text>
+<text x="1282" y="125" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="140" font-size="11" fill="#1d2433">order_status</text>
+<text x="1282" y="140" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="155" font-size="11" fill="#1d2433">order_date</text>
+<text x="1282" y="155" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="1068" y="170" font-size="11" fill="#1d2433">internal_code</text>
+<text x="1282" y="170" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="185" font-size="11" fill="#1d2433">quantity</text>
+<text x="1282" y="185" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1068" y="200" font-size="11" fill="#1d2433">total_order_amount</text>
+<text x="1282" y="200" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="215" font-size="11" fill="#1d2433">purchase_price</text>
+<text x="1282" y="215" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="230" font-size="11" fill="#1d2433">expected_fee_pct</text>
+<text x="1282" y="230" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="245" font-size="11" fill="#1d2433">expected_fee_amount</text>
+<text x="1282" y="245" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="260" font-size="11" fill="#1d2433">processing_fee</text>
+<text x="1282" y="260" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="275" font-size="11" fill="#1d2433">expected_total_cost</text>
+<text x="1282" y="275" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="290" font-size="11" fill="#1d2433">expected_net_profit</text>
+<text x="1282" y="290" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="305" font-size="11" fill="#1d2433">platform_transaction</text>
+<text x="1282" y="305" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="320" font-size="11" fill="#1d2433">date_of_transaction</text>
+<text x="1282" y="320" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="1068" y="335" font-size="11" fill="#1d2433">real_fee_pct</text>
+<text x="1282" y="335" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="350" font-size="11" fill="#1d2433">real_fee_amount</text>
+<text x="1282" y="350" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="365" font-size="11" fill="#1d2433">total_cost</text>
+<text x="1282" y="365" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="380" font-size="11" fill="#1d2433">net_profit</text>
+<text x="1282" y="380" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="395" font-size="11" fill="#1d2433">net_profit_pct</text>
+<text x="1282" y="395" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="410" font-size="11" fill="#1d2433">is_return</text>
+<text x="1282" y="410" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="1068" y="425" font-size="11" fill="#1d2433">notes</text>
+<text x="1282" y="425" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="440" font-size="11" fill="#1d2433">created_at</text>
+<text x="1282" y="440" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="1068" y="455" font-size="11" fill="#1d2433">updated_at</text>
+<text x="1282" y="455" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="1068" y="470" font-size="11" fill="#1d2433">cancellation_reason</text>
+<text x="1282" y="470" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1048" y="485" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1068" y="485" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="1282" y="485" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1048" y="500" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1068" y="500" font-size="11" fill="#1d2433">platform_id</text>
+<text x="1282" y="500" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="1048" y="515" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1068" y="515" font-size="11" fill="#1d2433">order_id</text>
+<text x="1282" y="515" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1068" y="530" font-size="11" fill="#1d2433">order_date_utc</text>
+<text x="1282" y="530" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="1068" y="545" font-size="11" fill="#1d2433">order_status_norm</text>
+<text x="1282" y="545" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="560" font-size="11" fill="#1d2433">sales_classification</text>
+<text x="1282" y="560" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="575" font-size="11" fill="#1d2433">is_counted</text>
+<text x="1282" y="575" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="1068" y="590" font-size="11" fill="#1d2433">excluded_reason</text>
+<text x="1282" y="590" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="605" font-size="11" fill="#1d2433">financial_status</text>
+<text x="1282" y="605" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1048" y="620" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1068" y="620" font-size="11" fill="#1d2433">classification_rule_id</text>
+<text x="1282" y="620" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1068" y="635" font-size="11" fill="#1d2433">fee_status</text>
+<text x="1282" y="635" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="650" font-size="11" fill="#1d2433">fee_source</text>
+<text x="1282" y="650" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="665" font-size="11" fill="#1d2433">cost_status</text>
+<text x="1282" y="665" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="680" font-size="11" fill="#1d2433">cost_source</text>
+<text x="1282" y="680" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="695" font-size="11" fill="#1d2433">financial_return_value</text>
+<text x="1282" y="695" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1068" y="710" font-size="11" fill="#1d2433">financial_return_qty</text>
+<text x="1282" y="710" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1068" y="725" font-size="11" fill="#1d2433">financial_basis</text>
+<text x="1282" y="725" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="740" font-size="11" fill="#1d2433">warehouse</text>
+<text x="1282" y="740" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1068" y="755" font-size="11" fill="#1d2433">excluded_at</text>
+<text x="1282" y="755" font-size="10" fill="#667085" text-anchor="end">timestamptz</text>
+<rect x="1380" y="20" width="250" height="297" rx="7" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+<rect x="1380" y="20" width="250" height="34" rx="7" fill="#0f766e"/><rect x="1380" y="46" width="250" height="8" fill="#0f766e"/>
+<text x="1389" y="33" font-size="10.5" fill="#fff" fill-opacity=".85">core</text>
+<text x="1389" y="47" font-size="13" font-weight="700" fill="#fff">claims</text>
+<text x="1388" y="65" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="1408" y="65" font-size="11" fill="#1d2433" font-weight="700">claim_id</text>
+<text x="1622" y="65" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1388" y="80" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="80" font-size="11" fill="#1d2433">return_row_id</text>
+<text x="1622" y="80" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1388" y="95" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="95" font-size="11" fill="#1d2433">order_row_id</text>
+<text x="1622" y="95" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1388" y="110" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="110" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="1622" y="110" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1388" y="125" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="125" font-size="11" fill="#1d2433">platform_id</text>
+<text x="1622" y="125" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="1408" y="140" font-size="11" fill="#1d2433">claim_number</text>
+<text x="1622" y="140" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="155" font-size="11" fill="#1d2433">claim_type</text>
+<text x="1622" y="155" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="170" font-size="11" fill="#1d2433">submitted_at</text>
+<text x="1622" y="170" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="1388" y="185" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="185" font-size="11" fill="#1d2433">status</text>
+<text x="1622" y="185" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="200" font-size="11" fill="#1d2433">claimed_amount</text>
+<text x="1622" y="200" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="215" font-size="11" fill="#1d2433">approved_amount</text>
+<text x="1622" y="215" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="230" font-size="11" fill="#1d2433">compensation_amount</text>
+<text x="1622" y="230" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="245" font-size="11" fill="#1d2433">rejection_reason</text>
+<text x="1622" y="245" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="260" font-size="11" fill="#1d2433">resolved_at</text>
+<text x="1622" y="260" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="1388" y="275" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="275" font-size="11" fill="#1d2433">source_compensation_id</text>
+<text x="1622" y="275" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1408" y="290" font-size="11" fill="#1d2433">notes</text>
+<text x="1622" y="290" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="305" font-size="11" fill="#1d2433">created_at</text>
+<text x="1622" y="305" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="1380" y="343" width="250" height="612" rx="7" fill="#fff" stroke="#1f5eff" stroke-width="1.6"/>
+<rect x="1380" y="343" width="250" height="34" rx="7" fill="#1f5eff"/><rect x="1380" y="369" width="250" height="8" fill="#1f5eff"/>
+<text x="1389" y="356" font-size="10.5" fill="#fff" fill-opacity=".85">public</text>
+<text x="1389" y="370" font-size="13" font-weight="700" fill="#fff">fact_returns</text>
+<text x="1388" y="388" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="1408" y="388" font-size="11" fill="#1d2433" font-weight="700">return_row_id</text>
+<text x="1622" y="388" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1388" y="403" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="403" font-size="11" fill="#1d2433">account_id</text>
+<text x="1622" y="403" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1408" y="418" font-size="11" fill="#1d2433">order_number</text>
+<text x="1622" y="418" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="433" font-size="11" fill="#1d2433">seller_sku</text>
+<text x="1622" y="433" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="448" font-size="11" fill="#1d2433">platform</text>
+<text x="1622" y="448" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="463" font-size="11" fill="#1d2433">order_date</text>
+<text x="1622" y="463" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="1408" y="478" font-size="11" fill="#1d2433">actual_returns</text>
+<text x="1622" y="478" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="493" font-size="11" fill="#1d2433">returns_status</text>
+<text x="1622" y="493" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="508" font-size="11" fill="#1d2433">unreceived_flag</text>
+<text x="1622" y="508" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="1408" y="523" font-size="11" fill="#1d2433">claim_raised</text>
+<text x="1622" y="523" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="1408" y="538" font-size="11" fill="#1d2433">claim_status</text>
+<text x="1622" y="538" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="553" font-size="11" fill="#1d2433">waived_amount</text>
+<text x="1622" y="553" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="568" font-size="11" fill="#1d2433">expected_returns</text>
+<text x="1622" y="568" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="583" font-size="11" fill="#1d2433">completion_status</text>
+<text x="1622" y="583" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="598" font-size="11" fill="#1d2433">notes</text>
+<text x="1622" y="598" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="613" font-size="11" fill="#1d2433">item_condition</text>
+<text x="1622" y="613" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="628" font-size="11" fill="#1d2433">condition_source</text>
+<text x="1622" y="628" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="643" font-size="11" fill="#1d2433">rtv_status</text>
+<text x="1622" y="643" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="658" font-size="11" fill="#1d2433">supplier_deduction_amount</text>
+<text x="1622" y="658" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="673" font-size="11" fill="#1d2433">internal_code</text>
+<text x="1622" y="673" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="688" font-size="11" fill="#1d2433">quantity</text>
+<text x="1622" y="688" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1388" y="703" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="703" font-size="11" fill="#1d2433">order_row_id</text>
+<text x="1622" y="703" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1388" y="718" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="718" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="1622" y="718" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1388" y="733" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="733" font-size="11" fill="#1d2433">platform_id</text>
+<text x="1622" y="733" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="1408" y="748" font-size="11" fill="#1d2433">return_date</text>
+<text x="1622" y="748" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="1388" y="763" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="763" font-size="11" fill="#1d2433">return_type</text>
+<text x="1622" y="763" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="778" font-size="11" fill="#1d2433">return_type_source</text>
+<text x="1622" y="778" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="793" font-size="11" fill="#1d2433">expected_quantity</text>
+<text x="1622" y="793" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1408" y="808" font-size="11" fill="#1d2433">received_quantity</text>
+<text x="1622" y="808" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1408" y="823" font-size="11" fill="#1d2433">physical_return_status</text>
+<text x="1622" y="823" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="838" font-size="11" fill="#1d2433">financial_return_status</text>
+<text x="1622" y="838" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1388" y="853" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="853" font-size="11" fill="#1d2433">return_condition</text>
+<text x="1622" y="853" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="868" font-size="11" fill="#1d2433">is_verified</text>
+<text x="1622" y="868" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="1408" y="883" font-size="11" fill="#1d2433">verification_method</text>
+<text x="1622" y="883" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="898" font-size="11" fill="#1d2433">match_method</text>
+<text x="1622" y="898" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="913" font-size="11" fill="#1d2433">match_confidence</text>
+<text x="1622" y="913" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1408" y="928" font-size="11" fill="#1d2433">claim_required</text>
+<text x="1622" y="928" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<text x="1388" y="943" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="943" font-size="11" fill="#1d2433">claim_id</text>
+<text x="1622" y="943" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<rect x="1380" y="981" width="250" height="177" rx="7" fill="#fff" stroke="#1f5eff" stroke-width="1.6"/>
+<rect x="1380" y="981" width="250" height="34" rx="7" fill="#1f5eff"/><rect x="1380" y="1007" width="250" height="8" fill="#1f5eff"/>
+<text x="1389" y="994" font-size="10.5" fill="#fff" fill-opacity=".85">public</text>
+<text x="1389" y="1008" font-size="13" font-weight="700" fill="#fff">fact_platform_compensation</text>
+<text x="1388" y="1026" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="1408" y="1026" font-size="11" fill="#1d2433" font-weight="700">compensation_id</text>
+<text x="1622" y="1026" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1388" y="1041" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1408" y="1041" font-size="11" fill="#1d2433">account_id</text>
+<text x="1622" y="1041" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1408" y="1056" font-size="11" fill="#1d2433">order_number</text>
+<text x="1622" y="1056" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="1071" font-size="11" fill="#1d2433">seller_sku</text>
+<text x="1622" y="1071" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="1086" font-size="11" fill="#1d2433">platform</text>
+<text x="1622" y="1086" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="1101" font-size="11" fill="#1d2433">claim_filed_date</text>
+<text x="1622" y="1101" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="1408" y="1116" font-size="11" fill="#1d2433">claim_status</text>
+<text x="1622" y="1116" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1408" y="1131" font-size="11" fill="#1d2433">compensation_amount</text>
+<text x="1622" y="1131" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1408" y="1146" font-size="11" fill="#1d2433">notes</text>
+<text x="1622" y="1146" font-size="10" fill="#667085" text-anchor="end">text</text>
+<rect x="1720" y="20" width="250" height="387" rx="7" fill="#fff" stroke="#b4570a" stroke-width="1.6"/>
+<rect x="1720" y="20" width="250" height="34" rx="7" fill="#b4570a"/><rect x="1720" y="46" width="250" height="8" fill="#b4570a"/>
+<text x="1729" y="33" font-size="10.5" fill="#fff" fill-opacity=".85">finance</text>
+<text x="1729" y="47" font-size="13" font-weight="700" fill="#fff">financial_transactions</text>
+<text x="1728" y="65" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="1748" y="65" font-size="11" fill="#1d2433" font-weight="700">txn_id</text>
+<text x="1962" y="65" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="80" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="80" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="1962" y="80" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1728" y="95" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="95" font-size="11" fill="#1d2433">platform_id</text>
+<text x="1962" y="95" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="1728" y="110" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="110" font-size="11" fill="#1d2433">raw_id</text>
+<text x="1962" y="110" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1748" y="125" font-size="11" fill="#1d2433">component</text>
+<text x="1962" y="125" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1728" y="140" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="140" font-size="11" fill="#1d2433">transaction_type</text>
+<text x="1962" y="140" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="155" font-size="11" fill="#1d2433">fee_bucket</text>
+<text x="1962" y="155" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="170" font-size="11" fill="#1d2433">transaction_date</text>
+<text x="1962" y="170" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="1748" y="185" font-size="11" fill="#1d2433">external_order_id</text>
+<text x="1962" y="185" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="200" font-size="11" fill="#1d2433">external_item_nr</text>
+<text x="1962" y="200" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="215" font-size="11" fill="#1d2433">partner_sku</text>
+<text x="1962" y="215" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1728" y="230" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="230" font-size="11" fill="#1d2433">order_id</text>
+<text x="1962" y="230" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="245" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="245" font-size="11" fill="#1d2433">order_row_id</text>
+<text x="1962" y="245" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="260" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="260" font-size="11" fill="#1d2433">return_id</text>
+<text x="1962" y="260" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="275" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="275" font-size="11" fill="#1d2433">claim_id</text>
+<text x="1962" y="275" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="290" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="290" font-size="11" fill="#1d2433">settlement_id</text>
+<text x="1962" y="290" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1748" y="305" font-size="11" fill="#1d2433">amount</text>
+<text x="1962" y="305" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1748" y="320" font-size="11" fill="#1d2433">currency</text>
+<text x="1962" y="320" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="335" font-size="11" fill="#1d2433">amount_status</text>
+<text x="1962" y="335" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="350" font-size="11" fill="#1d2433">amount_source</text>
+<text x="1962" y="350" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="365" font-size="11" fill="#1d2433">created_at</text>
+<text x="1962" y="365" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="1728" y="380" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="380" font-size="11" fill="#1d2433">jumia_raw_id</text>
+<text x="1962" y="380" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="395" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="395" font-size="11" fill="#1d2433">amazon_raw_id</text>
+<text x="1962" y="395" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<rect x="1720" y="433" width="250" height="222" rx="7" fill="#fff" stroke="#b4570a" stroke-width="1.6"/>
+<rect x="1720" y="433" width="250" height="34" rx="7" fill="#b4570a"/><rect x="1720" y="459" width="250" height="8" fill="#b4570a"/>
+<text x="1729" y="446" font-size="10.5" fill="#fff" fill-opacity=".85">finance</text>
+<text x="1729" y="460" font-size="13" font-weight="700" fill="#fff">platform_settlements</text>
+<text x="1728" y="478" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="1748" y="478" font-size="11" fill="#1d2433" font-weight="700">settlement_id</text>
+<text x="1962" y="478" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="493" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="493" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="1962" y="493" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="1728" y="508" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="508" font-size="11" fill="#1d2433">platform_id</text>
+<text x="1962" y="508" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="1748" y="523" font-size="11" fill="#1d2433">payout_reference</text>
+<text x="1962" y="523" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="538" font-size="11" fill="#1d2433">transfer_date</text>
+<text x="1962" y="538" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="1748" y="553" font-size="11" fill="#1d2433">contract_code</text>
+<text x="1962" y="553" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="568" font-size="11" fill="#1d2433">amount</text>
+<text x="1962" y="568" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1748" y="583" font-size="11" fill="#1d2433">currency</text>
+<text x="1962" y="583" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="598" font-size="11" fill="#1d2433">status</text>
+<text x="1962" y="598" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1748" y="613" font-size="11" fill="#1d2433">source</text>
+<text x="1962" y="613" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="1728" y="628" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="628" font-size="11" fill="#1d2433">raw_id</text>
+<text x="1962" y="628" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1748" y="643" font-size="11" fill="#1d2433">created_at</text>
+<text x="1962" y="643" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="1720" y="681" width="250" height="132" rx="7" fill="#fff" stroke="#b4570a" stroke-width="1.6"/>
+<rect x="1720" y="681" width="250" height="34" rx="7" fill="#b4570a"/><rect x="1720" y="707" width="250" height="8" fill="#b4570a"/>
+<text x="1729" y="694" font-size="10.5" fill="#fff" fill-opacity=".85">finance</text>
+<text x="1729" y="708" font-size="13" font-weight="700" fill="#fff">platform_settlement_items</text>
+<text x="1728" y="726" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="1748" y="726" font-size="11" fill="#1d2433" font-weight="700">item_id</text>
+<text x="1962" y="726" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="741" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="741" font-size="11" fill="#1d2433">settlement_id</text>
+<text x="1962" y="741" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="756" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="756" font-size="11" fill="#1d2433">txn_id</text>
+<text x="1962" y="756" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1728" y="771" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="1748" y="771" font-size="11" fill="#1d2433">order_row_id</text>
+<text x="1962" y="771" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="1748" y="786" font-size="11" fill="#1d2433">amount</text>
+<text x="1962" y="786" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="1748" y="801" font-size="11" fill="#1d2433">note</text>
+<text x="1962" y="801" font-size="10" fill="#667085" text-anchor="end">text</text>
+<rect x="2060" y="20" width="250" height="312" rx="7" fill="#fff" stroke="#b4570a" stroke-width="1.6"/>
+<rect x="2060" y="20" width="250" height="34" rx="7" fill="#b4570a"/><rect x="2060" y="46" width="250" height="8" fill="#b4570a"/>
+<text x="2069" y="33" font-size="10.5" fill="#fff" fill-opacity=".85">finance</text>
+<text x="2069" y="47" font-size="13" font-weight="700" fill="#fff">order_fee_components</text>
+<text x="2068" y="65" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="2088" y="65" font-size="11" fill="#1d2433" font-weight="700">fee_id</text>
+<text x="2302" y="65" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="2068" y="80" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="2088" y="80" font-size="11" fill="#1d2433">seller_account_id</text>
+<text x="2302" y="80" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="2068" y="95" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="2088" y="95" font-size="11" fill="#1d2433">platform_id</text>
+<text x="2302" y="95" font-size="10" fill="#667085" text-anchor="end">int2</text>
+<text x="2088" y="110" font-size="11" fill="#1d2433">external_order_id</text>
+<text x="2302" y="110" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="2068" y="125" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="2088" y="125" font-size="11" fill="#1d2433">order_id</text>
+<text x="2302" y="125" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="2088" y="140" font-size="11" fill="#1d2433">commission_fee</text>
+<text x="2302" y="140" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="155" font-size="11" fill="#1d2433">shipping_logistics_fee</text>
+<text x="2302" y="155" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="170" font-size="11" fill="#1d2433">other_fee</text>
+<text x="2302" y="170" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="185" font-size="11" fill="#1d2433">total_deduction</text>
+<text x="2302" y="185" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="200" font-size="11" fill="#1d2433">sale_amount</text>
+<text x="2302" y="200" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="215" font-size="11" fill="#1d2433">return_amount</text>
+<text x="2302" y="215" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="230" font-size="11" fill="#1d2433">txn_line_count</text>
+<text x="2302" y="230" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="2088" y="245" font-size="11" fill="#1d2433">first_txn_date</text>
+<text x="2302" y="245" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="2088" y="260" font-size="11" fill="#1d2433">last_txn_date</text>
+<text x="2302" y="260" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="2088" y="275" font-size="11" fill="#1d2433">fee_status</text>
+<text x="2302" y="275" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="2088" y="290" font-size="11" fill="#1d2433">fee_source</text>
+<text x="2302" y="290" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="2088" y="305" font-size="11" fill="#1d2433">snapshot_at</text>
+<text x="2302" y="305" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<text x="2088" y="320" font-size="11" fill="#1d2433">is_current</text>
+<text x="2302" y="320" font-size="10" fill="#667085" text-anchor="end">bool</text>
+<rect x="2060" y="358" width="250" height="252" rx="7" fill="#fff" stroke="#b4570a" stroke-width="1.6"/>
+<rect x="2060" y="358" width="250" height="34" rx="7" fill="#b4570a"/><rect x="2060" y="384" width="250" height="8" fill="#b4570a"/>
+<text x="2069" y="371" font-size="10.5" fill="#fff" fill-opacity=".85">finance</text>
+<text x="2069" y="385" font-size="13" font-weight="700" fill="#fff">supplier_transactions</text>
+<text x="2068" y="403" font-size="9.5" font-weight="700" fill="#b4570a">PK</text>
+<text x="2088" y="403" font-size="11" fill="#1d2433" font-weight="700">transaction_id</text>
+<text x="2302" y="403" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="2068" y="418" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="2088" y="418" font-size="11" fill="#1d2433">supplier_id</text>
+<text x="2302" y="418" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="2068" y="433" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="2088" y="433" font-size="11" fill="#1d2433">allocated_account_id</text>
+<text x="2302" y="433" font-size="10" fill="#667085" text-anchor="end">int4</text>
+<text x="2088" y="448" font-size="11" fill="#1d2433">transaction_date</text>
+<text x="2302" y="448" font-size="10" fill="#667085" text-anchor="end">date</text>
+<text x="2088" y="463" font-size="11" fill="#1d2433">date_basis</text>
+<text x="2302" y="463" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="2088" y="478" font-size="11" fill="#1d2433">transaction_type</text>
+<text x="2302" y="478" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="2088" y="493" font-size="11" fill="#1d2433">reference_type</text>
+<text x="2302" y="493" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="2088" y="508" font-size="11" fill="#1d2433">reference_id</text>
+<text x="2302" y="508" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="2068" y="523" font-size="9.5" font-weight="700" fill="#1f5eff">FK</text>
+<text x="2088" y="523" font-size="11" fill="#1d2433">order_row_id</text>
+<text x="2302" y="523" font-size="10" fill="#667085" text-anchor="end">int8</text>
+<text x="2088" y="538" font-size="11" fill="#1d2433">amount</text>
+<text x="2302" y="538" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="553" font-size="11" fill="#1d2433">debit</text>
+<text x="2302" y="553" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="568" font-size="11" fill="#1d2433">credit</text>
+<text x="2302" y="568" font-size="10" fill="#667085" text-anchor="end">numeric</text>
+<text x="2088" y="583" font-size="11" fill="#1d2433">description</text>
+<text x="2302" y="583" font-size="10" fill="#667085" text-anchor="end">text</text>
+<text x="2088" y="598" font-size="11" fill="#1d2433">created_at</text>
+<text x="2302" y="598" font-size="10" fill="#667085" text-anchor="end">timestamp</text>
+<rect x="20" y="1200" width="14" height="14" rx="3" fill="#8a6d3b"/><text x="40" y="1211" font-size="12" fill="#1d2433">raw</text>
+<rect x="115" y="1200" width="14" height="14" rx="3" fill="#6b7280"/><text x="135" y="1211" font-size="12" fill="#1d2433">ref</text>
+<rect x="210" y="1200" width="14" height="14" rx="3" fill="#1f5eff"/><text x="230" y="1211" font-size="12" fill="#1d2433">public</text>
+<rect x="305" y="1200" width="14" height="14" rx="3" fill="#0f766e"/><text x="325" y="1211" font-size="12" fill="#1d2433">core</text>
+<rect x="400" y="1200" width="14" height="14" rx="3" fill="#b4570a"/><text x="420" y="1211" font-size="12" fill="#1d2433">finance</text>
+<text x="520" y="1211" font-size="11.5" fill="#667085">Arrows = declared FOREIGN KEYs (child → parent). All columns shown as in the database. Links to hub tables (platforms, dim_accounts) omitted for clarity.</text>
+</svg></div>
+
+<h2>Two questions the database answers</h2>
+<p>Both queries run against the reporting layer (<code>reporting.rpt_order_profit</code>). The results below are the real output from the live database; product codes are masked.</p>
+
+<h3>1. Is each platform really profitable, by month?</h3>
+<p>Net profit comes from the marketplace's actual settlement minus goods cost and handling fee, not from list prices.</p>
+<pre>SELECT to_char(period_month,'YYYY-MM') AS month, platform,
+       count(*) AS orders,
+       round(sum(order_amount)) AS revenue,
+       round(sum(net_order_profit)) AS net_profit,
+       round(100*sum(net_order_profit)/NULLIF(sum(order_amount),0),1) AS margin_pct
+FROM   reporting.rpt_order_profit
+WHERE  sales_classification IN ('SALE','RETURN','PARTIAL_RETURN')
+GROUP  BY 1,2 ORDER BY 1 DESC, 2;</pre>
+<table>
+<tr><th>Month</th><th>Platform</th><th>Orders</th><th>Revenue (EGP)</th><th>Net profit (EGP)</th><th>Margin %</th></tr>
+<tr><td>2026-11</td><td>Amazon</td><td>24</td><td>8,364</td><td>2,601</td><td>31.1</td></tr>
+<tr><td>2026-11</td><td>Jumia</td><td>90</td><td>29,551</td><td>587</td><td>2.0</td></tr>
+<tr><td>2026-11</td><td>Noon</td><td>88</td><td>37,658</td><td>10,828</td><td>28.8</td></tr>
+<tr><td>2026-10</td><td>Amazon</td><td>25</td><td>6,971</td><td>1,775</td><td>25.5</td></tr>
+<tr><td>2026-10</td><td>Jumia</td><td>39</td><td>15,214</td><td>1,462</td><td>9.6</td></tr>
+<tr><td>2026-10</td><td>Noon</td><td>97</td><td>39,877</td><td>6,117</td><td>15.3</td></tr>
+<tr><td>2026-09</td><td>Amazon</td><td>4</td><td>1,354</td><td>309</td><td>22.8</td></tr>
+<tr><td>2026-09</td><td>Jumia</td><td>59</td><td>29,266</td><td>676</td><td>2.3</td></tr>
+<tr><td>2026-09</td><td>Noon</td><td>184</td><td>81,164</td><td>17,047</td><td>21.0</td></tr>
+<tr><td>2026-08</td><td>Amazon</td><td>2</td><td>423</td><td>62</td><td>14.6</td></tr>
+<tr><td>2026-08</td><td>Jumia</td><td>35</td><td>11,524</td><td>1,305</td><td>11.3</td></tr>
+<tr><td>2026-08</td><td>Noon</td><td>163</td><td>68,716</td><td>10,816</td><td>15.7</td></tr>
+</table>
+<p><b>What it tells me:</b> Jumia moves real volume but keeps almost nothing (2&ndash;3% margin in two of the last four months), while Noon and Amazon keep 15&ndash;31%. The decision: reprice or drop low-margin Jumia items before pushing more volume there.</p>
+
+<h3>2. Which products lose money, and how much of it is returns?</h3>
+<p>The decision this drives: stop reordering, raise the price, or fix the listing. (Aug&ndash;Nov 2026, products with at least 5 orders.)</p>
+<pre>SELECT product_ic, count(*) AS orders,
+       count(*) FILTER (WHERE sales_classification IN ('RETURN','PARTIAL_RETURN')) AS returned,
+       round(100.0*count(*) FILTER (WHERE sales_classification IN ('RETURN','PARTIAL_RETURN'))/count(*),1) AS return_rate_pct,
+       round(sum(net_order_profit)) AS net_profit
+FROM   reporting.rpt_order_profit
+WHERE  period_month &gt;= date '2026-08-01'
+GROUP  BY product_ic
+HAVING count(*) &gt;= 5 AND sum(net_order_profit) &lt; 0
+ORDER  BY net_profit;</pre>
+<table>
+<tr><th>Product</th><th>Orders</th><th>Returned</th><th>Return rate %</th><th>Net profit (EGP)</th></tr>
+<tr><td>P-01</td><td>35</td><td>7</td><td>20.0</td><td>-206</td></tr>
+<tr><td>P-02</td><td>5</td><td>0</td><td>0.0</td><td>-165</td></tr>
+<tr><td>P-03</td><td>6</td><td>0</td><td>0.0</td><td>-66</td></tr>
+<tr><td>P-04</td><td>5</td><td>1</td><td>20.0</td><td>-25</td></tr>
+</table>
+<p><b>What it tells me:</b> only four products lose money. P-01 is the one that matters (35 orders, one in five returned); P-02 and P-03 have no returns, so the issue there is price vs. cost, not quality.</p>
+
+<p style="font-size:13px;color:#667085">Order mix in the same layer: 796 completed sales, 75 completed returns, 3 partial returns; 133 orders still incomplete or estimated and flagged by <code>data_quality_status</code> rather than silently counted.</p>
+
+<h2>Rules I had to decide (and write down)</h2>
+<table>
+  <tr><th>Situation</th><th>Decision</th><th>Why it matters</th></tr>
+  <tr><td>Order shipped but the marketplace has not settled it yet</td><td>Excluded from total sales and shown as "pending" with an age flag (red after 21 days)</td><td>Prevents counting revenue that may still reverse.</td></tr>
+  <tr><td>Failed delivery</td><td>Removed from net sales; goods cost credited back only if the item returned in good condition; handling fee stays</td><td>Without this, failed deliveries looked cost-free.</td></tr>
+  <tr><td>Returned with no proof of condition</td><td>No supplier deduction; flagged "still being verified", not "not returned"</td><td>Avoids disputes over unproven claims.</td></tr>
+  <tr><td>Marketplace compensation for a lost or damaged item</td><td>Recorded on the date received, as a reduction of loss, never as sales</td><td>Keeps sales and profit honest.</td></tr>
+  <tr><td>Closed accounting period</td><td>Locked; corrections are posted as entries in the open period</td><td>Past reports never change silently.</td></tr>
+  <tr><td>Estimated vs actual marketplace amounts</td><td>Every amount carries an <code>ACTUAL</code>/<code>ESTIMATED</code> flag</td><td>Reports never mix guesses with money that really arrived.</td></tr>
+</table>
+
+<h2>What I would improve next</h2>
+<p>The database has 109 declared foreign keys, and the core ledger path is fully constrained (see the diagram). Many operational tables (job queues, logs, worker state) are intentionally unconstrained, but some finance tables still relate to each other only by shared keys such as account and order number. Next step: add real constraints there, and a <code>tenant_id</code> column on core, finance, ops and pricing tables so the same system can serve other clients.</p>
+
+<h2>Skills shown</h2>
+<p><span class="tag">PostgreSQL</span><span class="tag">Schema and layer design</span><span class="tag">Views and aggregation SQL</span><span class="tag">Idempotent migrations (35+ scripts)</span><span class="tag">Business rules to data model</span><span class="tag">Reconciliation</span><span class="tag">Row-level security</span><span class="tag">Power BI</span><span class="tag">Python automation</span></p>
+
+</main>
+<script>function erdZ(w){document.getElementById("erd").style.setProperty("--w",w)}</script>
+</body>
+</html>

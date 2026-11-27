@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Partner reporting portal with database-enforced isolation</title>
+<style>body{font:17px/1.65 system-ui,Segoe UI,sans-serif;color:#1d2433;background:#fafaf7;margin:0}main{max-width:1000px;margin:0 auto;padding:32px 20px 60px}h1{font-size:32px;line-height:1.2}.note{background:#fff7ed;border-left:4px solid #b4570a;padding:12px 16px;border-radius:6px;margin:18px 0}a{color:#0f766e}h2{margin-top:40px}h3{margin:22px 0 2px;font-size:18px}p{margin:6px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:18px 0}.k{background:#fff;border:1px solid #e3e5ea;border-radius:10px;padding:12px 14px}.k b{display:block;font-size:26px;color:#0f766e}.k span{font-size:14px;color:#667085}svg{width:100%;height:auto;background:#fff;border:1px solid #e3e5ea;border-radius:10px}li{margin:4px 0}table{border-collapse:collapse;width:100%;font-size:15px}td,th{border-bottom:1px solid #e3e5ea;padding:7px 8px;text-align:left}th{color:#667085;font-weight:600}</style></head><body><main>
+<a href="../index.html">&larr; Back to portfolio</a>
+<h1>A partner reporting portal where the database, not the screen, decides who sees what</h1>
+<p>Marketplace partners used to get a daily email, a weekly PDF and a Google Sheet. I built a web portal on top of the same numbers, so each partner logs in and sees only their own account: orders, returns, claims, payouts, statements and what they are owed.</p>
+<p><b>Role:</b> sole designer and builder (requirements, data design, security model, sync job, interface). <b>Stack:</b> PostgreSQL, Supabase (Auth + row-level security), Python sync job, React, TypeScript, Vite, Tailwind, Vercel.</p>
+<div class="note"><b>Notes.</b> Partner, supplier and account names are removed from this page. I understand every part of this system and could build it without help; I use an AI coding assistant to save time and effort, and the problem definition, the numbers, the security design and the checks are mine. It is a live internal tool, so the screens below come from a copy of my own code running on generated sample data (the interface is in Egyptian Arabic, as my users are). No client figures appear.</div>
+
+<div class="grid">
+<div class="k"><b>7</b><span>report tables published, nothing else leaves the warehouse</span></div>
+<div class="k"><b>0</b><span>partner-facing access to raw, finance or credential tables</span></div>
+<div class="k"><b>Automated</b><span>isolation test runs on every deploy</span></div>
+<div class="k"><b>To the cent</b><span>sync is checked against the source before it goes live</span></div>
+</div>
+
+<h2>The problem</h2>
+<p>Three channels (email, PDF, spreadsheet) meant three places for the same number to drift. Partners asked the same questions repeatedly (what was returned, what is still pending, what do you owe me), and every answer needed me. I wanted one place that answers those questions the same way every time, without exposing one partner's data to another.</p>
+
+<h2>Architecture</h2>
+<svg viewBox="0 0 900 190" role="img" aria-label="Local warehouse to sync job to Supabase portal schema to web app">
+<g font-family="system-ui,sans-serif" font-size="14" fill="#1d2433">
+<rect x="10" y="40" width="190" height="90" rx="10" fill="#eef6f5" stroke="#0f766e"/><text x="105" y="72" text-anchor="middle" font-weight="600">Local warehouse</text><text x="105" y="94" text-anchor="middle" font-size="12.5">PostgreSQL, private</text><text x="105" y="112" text-anchor="middle" font-size="12.5">reporting layer</text>
+<rect x="250" y="40" width="190" height="90" rx="10" fill="#f6f3ff" stroke="#6d4fd0"/><text x="345" y="72" text-anchor="middle" font-weight="600">Sync job (Python)</text><text x="345" y="94" text-anchor="middle" font-size="12.5">stage, reconcile,</text><text x="345" y="112" text-anchor="middle" font-size="12.5">swap in one transaction</text>
+<rect x="490" y="40" width="190" height="90" rx="10" fill="#fff7ed" stroke="#b4570a"/><text x="585" y="72" text-anchor="middle" font-weight="600">Supabase "portal"</text><text x="585" y="94" text-anchor="middle" font-size="12.5">row-level security,</text><text x="585" y="112" text-anchor="middle" font-size="12.5">invoker views</text>
+<rect x="730" y="40" width="160" height="90" rx="10" fill="#eef2ff" stroke="#3b5bdb"/><text x="810" y="72" text-anchor="middle" font-weight="600">Web portal</text><text x="810" y="94" text-anchor="middle" font-size="12.5">React on Vercel</text>
+<path d="M200 85h48" stroke="#667085" stroke-width="2" marker-end="url(#a)"/><path d="M440 85h48" stroke="#667085" stroke-width="2" marker-end="url(#a)"/><path d="M680 85h48" stroke="#667085" stroke-width="2" marker-end="url(#a)"/>
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="#667085"/></marker></defs>
+<text x="450" y="165" text-anchor="middle" font-size="12.5" fill="#667085">Only report tables go out. Isolation is enforced in the database, so a front-end bug cannot leak another partner's rows.</text>
+</g></svg>
+
+<h2>The interface</h2><style>figure{margin:22px 0}figure img{width:100%;border:1px solid #e3e5ea;border-radius:10px;background:#fff}figcaption{font-size:15px;color:#667085;margin-top:6px}</style><figure><a href="img/portal-home.png"><img src="img/portal-home.png" alt="Portal home" loading="lazy"></a><figcaption>Home: sales, returns, what the platforms took, profit, and the supplier balance, with a profit bridge that closes to the cent.</figcaption></figure><figure><a href="img/portal-orders.png"><img src="img/portal-orders.png" alt="Orders page" loading="lazy"></a><figcaption>Orders: every line with fees, cost, prep and result, filterable and exportable to Excel.</figcaption></figure><figure><a href="img/portal-returns.png"><img src="img/portal-returns.png" alt="Returns page" loading="lazy"></a><figcaption>Returns: where the returned money went, and what was lost.</figcaption></figure><figure><a href="img/portal-costs.png"><img src="img/portal-costs.png" alt="Costs page" loading="lazy"></a><figcaption>Costs: profit waterfall, supplier statement and owner share for the period.</figcaption></figure><h2>Decisions I would defend in an interview</h2>
+<h3>Isolation lives in the database</h3>
+<p>Each partner is limited to their own account by row-level security, and the views run with the caller's rights. The anonymous role has no permissions at all. Hiding things in the interface would not be enough, so I did not rely on it.</p>
+<h3>Publish less</h3>
+<p>The portal gets copies of seven report tables plus a health table for admins. Raw imports, finance ledgers and credentials never leave the local warehouse.</p>
+<h3>Never replace good data with bad data</h3>
+<p>The daily sync loads into a staging area, compares totals with the source to the cent, and only then swaps in a single transaction. If the check fails, partners keep seeing the last good copy, the run is marked failed, and the morning email names the failing stage.</p>
+<h3>One definition per number</h3>
+<p>Portal figures reuse the same measure definitions as the Power BI report, so a balance is the same number in every place. In the earlier redesign work I found five different figures for one balance and reduced them to one.</p>
+<h3>Access is a controlled process</h3>
+<p>Self sign-up is closed. A script creates users, refuses any real address without a named approval, and can disable or remove a user in one command. An admin account has two-factor sign-in. Disabling a partner account removes their data at the next sync.</p>
+<h3>Test the promise, not just the code</h3>
+<p>An automated test signs in as different users and checks that none can read another account's rows. It runs on every deploy and must report zero failures.</p>
+
+<h2>What partners can do</h2>
+<table><tr><th>Question</th><th>Where it is answered</th></tr>
+<tr><td>What did I sell, keep and lose this period?</td><td>Summary and profit pages with a date-range picker</td></tr>
+<tr><td>Which returns came back and in what condition?</td><td>Returns pages with drill-down and CSV export</td></tr>
+<tr><td>What is still pending on the platform?</td><td>Pending money by age</td></tr>
+<tr><td>What am I owed, and what was paid?</td><td>Statement, payouts and transfers</td></tr>
+<tr><td>What needs my attention?</td><td>Claims and inbox</td></tr></table>
+
+<h2>Reliability and operations</h2>
+<ul>
+<li>A health command reports whether the last sync is stale, failed, or the project is unreachable, and exits with a different code for each case.</li>
+<li>Daily writes keep the free-tier database from pausing after a quiet week.</li>
+<li>Security headers (content security policy, HSTS) are set in the hosting config.</li>
+<li>A runbook documents first-time setup, adding a partner, stopping an account and emergency shutdown.</li>
+</ul>
+
+<h2>What I would improve next</h2>
+<p>Enforce two-factor sign-in inside the database policies, not only in the interface, and connect the daily sync to the scheduler so it no longer depends on a manual run.</p>
+</main></body></html>
