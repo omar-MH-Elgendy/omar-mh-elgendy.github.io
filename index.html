@@ -102,7 +102,7 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
 </section>
 
 <section class="stats" aria-label="Numbers">
-  <div class="stat"><b>866</b><span>marketplace order lines analysed</span></div>
+  <div class="stat"><b>866</b><span>order lines analysed in the Apr–Oct 2026 snapshot</span></div>
   <div class="stat"><b>80+</b><span>DAX measures in one model</span></div>
   <div class="stat"><b>4</b><span>marketplaces run live</span></div>
   <div class="stat"><b>10+</b><span>years in customer operations</span></div>
@@ -123,13 +123,51 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
   <span class="eyebrow">Selected work</span>
   <h2>Selected projects from a live business</h2>
   <div class="cases">
-
-  <article class="case">
+    <article class="case">
+    <div>
+      <span class="tag">Flagship · full-stack data product</span>
+      <h3>Partner reporting portal with database-enforced isolation</h3>
+      <p>Partners used to get emails, PDFs and spreadsheets that drifted apart. I built a portal where each partner logs in and sees only their own orders, returns, claims, payouts and statements. The database enforces who sees what, and the daily sync is checked against the source to the cent before it goes live.</p>
+      <div class="kp"><div><b>7</b><span>report tables published</span></div><div><b>0</b><span>raw or finance tables exposed</span></div><div><b>Auto</b><span>isolation test on each deploy</span></div></div>
+      <div class="decide"><b>Why it matters:</b> one definition per number, access that can be switched off in one command, and a sync that never replaces good data with bad.</div>
+      <a class="link" href="reports/portal-case-study.html">Open the case study →</a>
+    </div>
+    <div class="side"><span class="eyebrow">Built end to end</span><ul class="list"><li>Row-level security in Supabase</li><li>Python sync with reconciliation</li><li>React, TypeScript, Vercel</li><li>Runbook for setup, access and shutdown</li></ul></div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">Database case study</span>
+      <h3>A reporting database for four marketplace accounts</h3>
+      <p>PostgreSQL with 12 schemas, 235 tables and 114 views: raw imports, a clean core model, five ledgers, and reporting views that feed the dashboards and the partner portal. Real monthly profit (Aug–Nov 2026) and loss-making products are shown, with names removed.</p>
+      <div class="kp"><div><b>235</b><span>tables</span></div><div><b>114</b><span>views</span></div><div><b>109</b><span>foreign keys</span></div></div>
+      <a class="link" href="reports/db-case-study.html">Open the case study →</a>
+    </div>
+    <div class="side"><span class="eyebrow">Layers</span><ul class="list"><li>raw → core / ref</li><li>finance, ops, pricing, ads</li><li>reporting and BI views</li><li>portal with row-level security</li></ul></div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">Power BI report</span>
+      <h3>A partner-facing Power BI report on a live database</h3>
+      <p>Thirteen pages on a star schema with 80 DAX measures in 10 folders. Screens, model view and selected DAX are on the page, anonymized.</p>
+      <a class="link" href="reports/bi-case-study.html">Open the case study →</a>
+    </div>
+    <div class="side"><span class="eyebrow">Inside</span><ul class="list"><li>Month-over-month with DATEADD</li><li>Waterfall from a disconnected table</li><li>SVG data bars in measures</li></ul></div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">Internal tool</span>
+      <h3>Control Center: an approvals app for daily operations</h3>
+      <p>Everything that needs my decision arrives as a card: the issue, the evidence, a free-text box for my reasoning and one button to execute. It works on phone and PC, and a scheduled dispatcher passes approved items to my coding assistant so fixes do not wait for me to copy messages around.</p>
+      <div class="decide"><b>Status:</b> in daily use; moving to hosted deployment so a future hire can use it too.</div>
+    </div>
+    <div class="side"><span class="eyebrow">Design choices</span><ul class="list"><li>Decisions as cards, not spreadsheets</li><li>Reasoning captured with each approval</li><li>Reports in the portal, decisions in the app</li></ul></div>
+  </article>
+    <article class="case">
     <div>
       <span class="tag">Insights report</span>
       <h3>Where marketplace profit leaks</h3>
       <p>Returns and failed deliveries took back almost a third of the profit earned on good orders. Jumia returns 29% of gross sales, Noon charges 25% in fees, and the monthly margin fell from 29% to 8%.</p>
-      <div class="kp"><div><b>31%</b><span>of profit lost</span></div><div><b>18,109</b><span>EGP lost on 170 lines</span></div></div>
+      <div class="kp"><div><b>31%</b><span>of profit lost</span></div><div><b>18,109</b><span>EGP lost on 170 of 866 lines, Apr–Oct 2026</span></div></div>
       <div class="decide"><b>Decision:</b> pull repeat-return products on Jumia, price Noon items with the fee included, review prices on fast-growing products.</div>
       <a class="link" href="reports/profit-leakage.html" >Open the report →</a>
     </div>
@@ -143,8 +181,7 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
       <span class="note">Bars drawn to scale from the report data.</span>
     </div>
   </article>
-
-  <article class="case">
+    <article class="case">
     <div>
       <span class="tag">Insights report</span>
       <h3>Returns and failed deliveries</h3>
@@ -159,77 +196,6 @@ footer{font-size:.85rem;color:var(--muted);text-align:center}
         <div class="row"><span>Noon</span><i style="width:11.4%"></i><span>15</span></div>
       </div>
       <span class="note">3,558 EGP over 27 lines and 356 EGP over 23 lines.</span>
-    </div>
-  </article>
-
-  <article class="case">
-    <div>
-      <span class="tag">Flagship · full-stack data product</span>
-      <h3>Partner reporting portal with database-enforced isolation</h3>
-      <p>Partners used to get emails, PDFs and spreadsheets that drifted apart. I built a portal where each partner logs in and sees only their own orders, returns, claims, payouts and statements. The database enforces who sees what, and the daily sync is checked against the source to the cent before it goes live.</p>
-      <div class="kp"><div><b>7</b><span>report tables published</span></div><div><b>0</b><span>raw or finance tables exposed</span></div><div><b>Auto</b><span>isolation test on each deploy</span></div></div>
-      <div class="decide"><b>Why it matters:</b> one definition per number, access that can be switched off in one command, and a sync that never replaces good data with bad.</div>
-      <a class="link" href="reports/portal-case-study.html">Open the case study →</a>
-    </div>
-    <div class="side"><span class="eyebrow">Built end to end</span><ul class="list"><li>Row-level security in Supabase</li><li>Python sync with reconciliation</li><li>React, TypeScript, Vercel</li><li>Runbook for setup, access and shutdown</li></ul></div>
-  </article>
-
-  <article class="case">
-    <div>
-      <span class="tag">Internal tool</span>
-      <h3>Control Center: an approvals app for daily operations</h3>
-      <p>Everything that needs my decision arrives as a card: the issue, the evidence, a free-text box for my reasoning and one button to execute. It works on phone and PC, and a scheduled dispatcher passes approved items to my coding assistant so fixes do not wait for me to copy messages around.</p>
-      <div class="decide"><b>Status:</b> in daily use; moving to hosted deployment so a future hire can use it too.</div>
-    </div>
-    <div class="side"><span class="eyebrow">Design choices</span><ul class="list"><li>Decisions as cards, not spreadsheets</li><li>Reasoning captured with each approval</li><li>Reports in the portal, decisions in the app</li></ul></div>
-  </article>
-
-  <article class="case">
-    <div>
-      <span class="tag">Database case study</span>
-      <h3>A reporting database for four marketplace accounts</h3>
-      <p>PostgreSQL with 12 schemas, 235 tables and 114 views: raw imports, a clean core model, five ledgers, and reporting views that feed the dashboards and the partner portal. Real monthly profit and loss-making products are shown, with names removed.</p>
-      <div class="kp"><div><b>235</b><span>tables</span></div><div><b>114</b><span>views</span></div><div><b>109</b><span>foreign keys</span></div></div>
-      <a class="link" href="reports/db-case-study.html">Open the case study →</a>
-    </div>
-    <div class="side"><span class="eyebrow">Layers</span><ul class="list"><li>raw → core / ref</li><li>finance, ops, pricing, ads</li><li>reporting and BI views</li><li>portal with row-level security</li></ul></div>
-  </article>
-
-  <article class="case">
-    <div>
-      <span class="tag">Power BI report</span>
-      <h3>A partner-facing Power BI report on a live database</h3>
-      <p>Thirteen pages on a star schema with 80 DAX measures in 10 folders. Screens, model view and selected DAX are on the page, anonymized.</p>
-      <a class="link" href="reports/bi-case-study.html">Open the case study →</a>
-    </div>
-    <div class="side"><span class="eyebrow">Inside</span><ul class="list"><li>Month-over-month with DATEADD</li><li>Waterfall from a disconnected table</li><li>SVG data bars in measures</li></ul></div>
-  </article>
-
-  <article class="case">
-    <div>
-      <span class="tag">Power BI model</span>
-      <h3>Partner reporting with row-level security</h3>
-      <p>A star-schema model that reports sales, fees, returns, payouts and balances for several partner accounts from one dataset. Each partner opens the same report and sees only their own numbers. A Python pipeline of more than 30 steps loads and checks the data before each refresh.</p>
-      <div class="kp"><div><b>9 + 7</b><span>fact + dimension tables</span></div><div><b>34</b><span>relationships</span></div><div><b>80+</b><span>DAX measures</span></div><div><b>3</b><span>security roles</span></div></div>
-      <div class="decide"><b>Scope:</b> model, security roles and load pipeline built end to end. Screens available on request.</div>
-    </div>
-    <div class="side">
-      <span class="eyebrow">What the model covers</span>
-      <ul class="list"><li>Orders, fees and return lines per marketplace</li><li>Payouts and transfers against what is owed</li><li>Pending money by age</li><li>Roles that limit each partner to their own account</li></ul>
-    </div>
-  </article>
-
-  <article class="case">
-    <div>
-      <span class="tag">Case study</span>
-      <h3>Redesign of an operations reporting portal</h3>
-      <p>The portal had 25 pages, five different figures for the same balance and admin tools mixed in with partner pages. I audited every page, wrote the specification for each partner view and built an interactive prototype with a date-range calendar, drill-down tables and CSV export, using sample data.</p>
-      <div class="kp"><div><b>25 → 7</b><span>pages after consolidation</span></div><div><b>5 → 1</b><span>figures for one balance</span></div></div>
-      <div class="decide"><b>Status:</b> redesign specified and prototyped; the first text and grouping fixes are in progress.</div>
-    </div>
-    <div class="side">
-      <span class="eyebrow">Audit findings</span>
-      <ul class="list"><li>Duplicate pages for the same question</li><li>No charts on the main pages</li><li>Inconsistent labels for one calculation</li><li>An inbox of 82 items with no priority</li></ul>
     </div>
   </article>
   </div>
