@@ -835,7 +835,7 @@
 </svg></div>
 
 <h2>Two questions the database answers</h2>
-<p class="note"><b>Scope of the figures.</b> This page uses the reporting view over Aug–Nov 2026 (sales, returns and partial returns). The two insight reports use a separate Apr–Oct 2026 snapshot of 866 order lines with a known purchase cost, so monthly margins differ between them by design.</p>
+<p class="note"><b>Scope of the figures.</b> This page covers Aug–Nov 2026 from <code>reporting.rpt_order_profit</code>. The two insight reports use the same view and the same export (Apr–Nov 2026), so totals agree; November is month to date. Margins here divide by all order amounts, including lines whose purchase cost is not known yet, so they are slightly conservative.</p>
 <p>Both queries run against the reporting layer (<code>reporting.rpt_order_profit</code>). The results below are the real output from the live database; product codes are masked.</p>
 
 <h3>1. Is each platform really profitable, by month?</h3>
@@ -850,8 +850,8 @@ WHERE  sales_classification IN ('SALE','RETURN','PARTIAL_RETURN')
 GROUP  BY 1,2 ORDER BY 1 DESC, 2;</pre>
 <table>
 <tr><th>Month</th><th>Platform</th><th>Orders</th><th>Revenue (EGP)</th><th>Net profit (EGP)</th><th>Margin %</th></tr>
-<tr><td>2026-11</td><td>Amazon</td><td>24</td><td>8,364</td><td>2,601</td><td>31.1</td></tr>
-<tr><td>2026-11</td><td>Jumia</td><td>90</td><td>29,551</td><td>587</td><td>2.0</td></tr>
+<tr><td>2026-11</td><td>Amazon</td><td>24</td><td>8,364</td><td>2,399</td><td>28.7</td></tr>
+<tr><td>2026-11</td><td>Jumia</td><td>91</td><td>29,984</td><td>632</td><td>2.1</td></tr>
 <tr><td>2026-11</td><td>Noon</td><td>88</td><td>37,658</td><td>10,828</td><td>28.8</td></tr>
 <tr><td>2026-10</td><td>Amazon</td><td>25</td><td>6,971</td><td>1,775</td><td>25.5</td></tr>
 <tr><td>2026-10</td><td>Jumia</td><td>39</td><td>15,214</td><td>1,462</td><td>9.6</td></tr>
@@ -861,9 +861,9 @@ GROUP  BY 1,2 ORDER BY 1 DESC, 2;</pre>
 <tr><td>2026-09</td><td>Noon</td><td>184</td><td>81,164</td><td>17,047</td><td>21.0</td></tr>
 <tr><td>2026-08</td><td>Amazon</td><td>2</td><td>423</td><td>62</td><td>14.6</td></tr>
 <tr><td>2026-08</td><td>Jumia</td><td>35</td><td>11,524</td><td>1,305</td><td>11.3</td></tr>
-<tr><td>2026-08</td><td>Noon</td><td>163</td><td>68,716</td><td>10,816</td><td>15.7</td></tr>
+<tr><td>2026-08</td><td>Noon</td><td>163</td><td>68,716</td><td>10,871</td><td>15.8</td></tr>
 </table>
-<p><b>What it tells me:</b> Jumia moves real volume but keeps almost nothing (2&ndash;3% margin in two of the last four months), while Noon and Amazon keep 15&ndash;31%. The decision: reprice or drop low-margin Jumia items before pushing more volume there.</p>
+<p><b>What it tells me:</b> Jumia moves real volume but keeps almost nothing (2&ndash;3% margin in two of the last four months), while Noon and Amazon keep 15&ndash;29%. The decision: reprice or drop low-margin Jumia items before pushing more volume there.</p>
 
 <h3>2. Which products lose money, and how much of it is returns?</h3>
 <p>The decision this drives: stop reordering, raise the price, or fix the listing. (Aug&ndash;Nov 2026, products with at least 5 orders.)</p>
@@ -878,14 +878,13 @@ HAVING count(*) &gt;= 5 AND sum(net_order_profit) &lt; 0
 ORDER  BY net_profit;</pre>
 <table>
 <tr><th>Product</th><th>Orders</th><th>Returned</th><th>Return rate %</th><th>Net profit (EGP)</th></tr>
-<tr><td>P-01</td><td>35</td><td>7</td><td>20.0</td><td>-206</td></tr>
-<tr><td>P-02</td><td>5</td><td>0</td><td>0.0</td><td>-165</td></tr>
-<tr><td>P-03</td><td>6</td><td>0</td><td>0.0</td><td>-66</td></tr>
-<tr><td>P-04</td><td>5</td><td>1</td><td>20.0</td><td>-25</td></tr>
+<tr><td>P-094</td><td>35</td><td>7</td><td>20.0</td><td>-206</td></tr>
+<tr><td>P-230</td><td>5</td><td>0</td><td>0.0</td><td>-165</td></tr>
+<tr><td>P-106</td><td>6</td><td>0</td><td>0.0</td><td>-66</td></tr>
 </table>
-<p><b>What it tells me:</b> only four products lose money. P-01 is the one that matters (35 orders, one in five returned); P-02 and P-03 have no returns, so the issue there is price vs. cost, not quality.</p>
+<p><b>What it tells me:</b> only three products lose money. P-094 is the one that matters (35 orders, one in five returned); P-230 and P-106 have no returns, so the issue there is price vs. cost, not quality.</p>
 
-<p style="font-size:13px;color:#667085">Order mix in the same layer: 796 completed sales, 75 completed returns, 3 partial returns; 133 orders still incomplete or estimated and flagged by <code>data_quality_status</code> rather than silently counted.</p>
+<p style="font-size:13px;color:#667085">Order mix in the same layer (Aug–Nov 2026, 811 lines): 744 sales, 66 returns, 1 partial return; 80 lines are still incomplete or estimated and flagged by <code>data_quality_status</code> rather than silently counted.</p>
 
 <h2>Rules I had to decide (and write down)</h2>
 <table>
