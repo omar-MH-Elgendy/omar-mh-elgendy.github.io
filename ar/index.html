@@ -1,0 +1,282 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>عمر محمد الجندي | معرض الأعمال</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: dark navy page, hero with a framed portrait on the right, then numbers, services, project cases, skills. Committed single dark look, taken from the saved Pinterest references. */
+:root{
+  --bg:#faf7f1; --bg2:#f1ece2; --panel:#ffffff; --line:#e3dccf; --fg:#1c1912; --muted:#6b665a;
+  --blue:#c9780b; --violet:#2f7f94; --amber:#8a5a0c; --bad:#c4452f; --good:#1f8a5b;
+  --display:'Cairo','Sora','Segoe UI',system-ui,sans-serif; --body:'IBM Plex Sans Arabic','IBM Plex Sans','Segoe UI',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 1rem/1.6 var(--body);padding-block:1.5rem 4rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background-image:radial-gradient(46rem 30rem at 85% 0%,rgba(201,120,11,.20),transparent 70%),radial-gradient(40rem 26rem at 0% 30%,rgba(47,127,148,.14),transparent 70%)}
+.wrap{max-width:68rem;margin-inline:auto;display:flex;flex-direction:column;gap:4rem}
+a{color:var(--blue)}
+a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.15;text-wrap:balance}
+.eyebrow{font:500 .75rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+nav{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+.logo{font:700 1.1rem var(--display)}
+.logo b{background:linear-gradient(90deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+nav div{display:flex;gap:1.25rem;font-size:.9rem;flex-wrap:wrap}
+nav a{color:var(--muted);text-decoration:none}nav a:hover{color:var(--fg)}
+.hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:2.5rem;align-items:center}
+@media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}.hero .shot{order:-1;max-width:16rem;margin-inline:auto}}
+.hero h1{font-size:clamp(2.2rem,6.5vw,3.8rem);font-weight:800;letter-spacing:-.03em;margin:.6rem 0 1rem}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);font-size:1.1rem;max-width:36rem;margin:0 0 1.5rem}
+.cta{display:flex;gap:.8rem;flex-wrap:wrap}
+.btn{font:600 .95rem var(--display);padding:.8rem 1.4rem;border-radius:12px;text-decoration:none;color:#fff;background:linear-gradient(90deg,var(--blue),#a85f05);box-shadow:0 8px 28px rgba(201,120,11,.35)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--fg);box-shadow:none}
+.mail{margin-top:1rem;font:400 .85rem var(--mono);color:var(--muted)}.mail span{color:var(--fg);user-select:all}
+.shot{position:relative;aspect-ratio:1/1;border-radius:50%;padding:6px;background:conic-gradient(from 140deg,var(--blue),var(--violet),var(--amber),var(--blue));box-shadow:0 0 70px rgba(201,120,11,.35)}
+.shot .in{width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--bg2);display:flex;align-items:center;justify-content:center}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot .ph{font:800 4rem var(--display);color:var(--muted)}
+.badge{position:absolute;font:500 .72rem var(--mono);padding:.35rem .7rem;border-radius:999px;background:var(--panel);border:1px solid var(--line);white-space:nowrap}
+.badge.a{left:-6%;bottom:14%}.badge.b{right:-4%;top:12%;color:var(--amber)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:1rem}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.2rem}
+.stat b{display:block;font:700 2rem var(--display);font-variant-numeric:tabular-nums}
+.stat:nth-child(1) b{color:var(--blue)}.stat:nth-child(2) b{color:var(--violet)}.stat:nth-child(3) b{color:var(--amber)}.stat:nth-child(4) b{color:var(--good)}
+.stat span{font-size:.85rem;color:var(--muted)}
+.sec{display:flex;flex-direction:column;gap:1.5rem}
+.sec h2{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:1.25rem;min-width:0}
+.card h3{font-size:1.05rem;margin-bottom:.4rem}.card p{margin:0;color:var(--muted);font-size:.92rem}
+.ico{width:2.4rem;height:2.4rem;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:.8rem;background:rgba(201,120,11,.15);color:var(--blue)}
+.card:nth-child(2) .ico{background:rgba(47,127,148,.16);color:var(--violet)}.card:nth-child(3) .ico{background:rgba(138,90,12,.16);color:var(--amber)}.card:nth-child(4) .ico{background:rgba(31,138,91,.14);color:var(--good)}
+.cases{display:flex;flex-direction:column;gap:1.25rem}
+.case{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:20px;padding:1.6rem;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:1.5rem 2.5rem}
+@media (max-width:760px){.case{grid-template-columns:minmax(0,1fr)}}
+.tag{font:500 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--violet)}
+.case h3{font-size:1.35rem;margin:.3rem 0 .6rem}.case p{margin:.4rem 0;color:var(--muted)}
+.kp{display:flex;flex-wrap:wrap;gap:.8rem 1.6rem;margin:1rem 0}
+.kp b{display:block;font:700 1.6rem var(--display);font-variant-numeric:tabular-nums}.kp span{font-size:.78rem;color:var(--muted)}
+.decide{padding:.8rem 1rem;border-radius:12px;background:rgba(201,120,11,.1);border:1px solid rgba(201,120,11,.25);font-size:.93rem}
+.link{display:inline-block;margin-top:1rem;font:600 .95rem var(--display);color:var(--amber);text-decoration:none}
+.side{min-width:0;display:flex;flex-direction:column;gap:.6rem;justify-content:center}
+.bars{display:flex;flex-direction:column;gap:.6rem;font-size:.85rem}
+.row{display:grid;grid-template-columns:4.8rem minmax(0,1fr) 3.2rem;gap:.6rem;align-items:center}
+.row i{display:block;height:.85rem;border-radius:6px;background:linear-gradient(90deg,var(--violet),var(--blue))}
+.row i.hot{background:linear-gradient(90deg,var(--amber),var(--bad))}
+.row span:last-child{text-align:right;font-family:var(--mono)}
+.note{font-size:.78rem;color:var(--muted)}
+.list{margin:0;padding-left:1.1rem;color:var(--muted);font-size:.93rem}.list li{margin:.3rem 0}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{font:500 .82rem var(--mono);padding:.4rem .8rem;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+.tier{display:grid;grid-template-columns:8rem minmax(0,1fr);gap:.8rem;align-items:center}
+@media (max-width:600px){.tier{grid-template-columns:minmax(0,1fr)}}
+.tier>span{font:500 .8rem var(--mono);color:var(--amber)}
+.skills{display:flex;flex-direction:column;gap:1rem}
+.contact{text-align:center;padding:2.5rem 1.5rem;border-radius:24px;background:linear-gradient(135deg,rgba(201,120,11,.25),rgba(47,127,148,.22));border:1px solid var(--line);display:flex;flex-direction:column;gap:1rem;align-items:center}
+.contact h2{font-size:clamp(1.6rem,4vw,2.3rem)}
+.phones{display:grid;gap:.6rem;width:100%;max-width:34rem;text-align:left}
+.ph1{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.6rem .9rem}
+.ph1 .lbl{display:flex;width:2rem;color:var(--amber)}.ph1 .lbl .wa{color:#1f9d55}
+.ph1 .val{font:500 .95rem var(--mono);flex:1;min-width:0;overflow-wrap:anywhere;user-select:all}
+.ph1 button{font:600 .8rem var(--body);padding:.35rem .8rem;border-radius:8px;border:1px solid var(--line);background:var(--bg2);color:var(--fg);cursor:pointer}
+.ph1 a{font:600 .8rem var(--body);color:var(--blue)}
+.ph1 button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.ic-line{display:flex;flex-direction:column;gap:.35rem}.ic-line div{display:flex;align-items:center;gap:.6rem}.ic-line .wa{color:#1f9d55}.ic-line svg{color:var(--amber);flex:none}.ic-line .wa{color:#1f9d55}
+footer{font-size:.85rem;color:var(--muted);text-align:center}
+.hero h1{letter-spacing:0}[dir=rtl] .link{direction:rtl}.mail span,.val,.ph1 .val{direction:ltr;unicode-bidi:plaintext}</style>
+<div class="wrap">
+<nav><span class="logo">عمر محمد <b>الجندي</b></span><div><a href="#work">الأعمال</a><a href="#services">الخدمات</a><a href="#experience">الخبرة</a><a href="#skills">المهارات</a><a href="#contact">تواصل</a><a href="../index.html" lang="en">English</a></div></nav>
+
+<section class="hero">
+  <div>
+    <span class="eyebrow">محلل بيانات وعمليات · عن بُعد · لأي مكان في العالم</span>
+    <h1>أنا عمر محمد الجندي. أحوّل بيانات المتاجر الإلكترونية إلى <em>قرارات</em>.</h1>
+    <p class="lead">عشر سنوات في عمليات خدمة العملاء، وأبني الآن منتجات بيانات لتجارة إلكترونية حية: قاعدة بيانات PostgreSQL، وتقرير Power BI، وبوابة للشركاء تفرض الصلاحيات من قاعدة البيانات نفسها، والقرارات التي تنتج عنها. كل ما تراه هنا من عملي أنا، مع إخفاء الأسماء.</p>
+    <div class="cta"><a class="btn" href="#work">شاهد الأعمال</a><a class="btn ghost" href="https://www.linkedin.com/in/omar-mohamed-elgendy" target="_blank" rel="noopener">LinkedIn</a></div>
+    <div class="mail ic-line"><div><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Email" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg><span>omar.mmhussien@outlook.com</span></div><div><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Phone" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg><span>+201114004331</span></div><div><svg class="ic wa" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="WhatsApp" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-4.2A8.5 8.5 0 1112 20.5a8.4 8.4 0 01-4-1z"/><path d="M9 8.5c0 3.3 3.2 6.5 6.5 6.5l1-1.6-2.1-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg><span>+201060028003</span></div></div>
+  </div>
+  <div class="shot">
+    <div class="in"><img src="../photo.webp" alt="صورة عمر محمد الجندي" width="560" height="560"></div>
+    <span class="badge a">Power BI · SQL · Python</span><span class="badge b">+10 سنوات عمليات</span>
+  </div>
+</section>
+
+<section class="stats" aria-label="Numbers">
+  <div class="stat"><b>1,003</b><span>سطر طلب محلَّل، أبريل–نوفمبر 2026</span></div>
+  <div class="stat"><b>80+</b><span>مقياس DAX في نموذج واحد</span></div>
+  <div class="stat"><b>4</b><span>منصات أديرها فعليًا</span></div>
+  <div class="stat"><b>10+</b><span>سنوات في عمليات خدمة العملاء</span></div>
+</section>
+
+<section class="sec" id="services">
+  <span class="eyebrow">ماذا أقدّم</span>
+  <h2>تقارير تنتهي بقرار</h2>
+  <div class="grid">
+    <div class="card"><div class="ico" aria-hidden="true">▦</div><h3>لوحات Power BI</h3><p>نماذج Star schema ومقاييس DAX وأمان على مستوى الصف، ليرى كل شخص أرقامه فقط.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">◔</div><h3>تحليل المتاجر الإلكترونية</h3><p>الربح والعمولات والمرتجعات والمستحقات عبر أمازون ونون وجوميا ورنين، وتنتهي بقرار واضح.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">↻</div><h3>أتمتة بايثون</h3><p>مسارات تحميل وفحص للبيانات تحل محل النسخ واللصق الأسبوعي.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">⌘</div><h3>نمذجة بيانات SQL</h3><p>جداول PostgreSQL وSupabase نظيفة تعتمد عليها التقارير.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="work">
+  <span class="eyebrow">أعمال مختارة</span>
+  <h2>مشاريع مختارة من نشاط تجاري حي</h2>
+  <div class="cases">
+    <article class="case">
+    <div>
+      <span class="tag">المشروع الرئيسي · منتج بيانات متكامل</span>
+      <h3>بوابة تقارير للشركاء مع عزل مفروض من قاعدة البيانات</h3>
+      <p>كان الشركاء يتلقون رسائل وملفات PDF وجداول تتباعد أرقامها. بنيت بوابة يدخلها كل شريك ليرى طلباته ومرتجعاته ومطالباته ومستحقاته وكشوفه فقط. قاعدة البيانات هي التي تفرض من يرى ماذا، والمزامنة اليومية تُقارن بالمصدر حتى القرش قبل النشر.</p>
+      <div class="kp"><div><b>7</b><span>جداول تقارير منشورة</span></div><div><b>0</b><span>جداول خام أو مالية مكشوفة</span></div><div><b>تلقائي</b><span>اختبار عزل مع كل نشر</span></div></div>
+      <div class="decide"><b>لماذا يهم:</b> تعريف واحد لكل رقم، وصلاحيات تُغلق بأمر واحد، ومزامنة لا تستبدل بيانات سليمة بأخرى خاطئة.</div>
+      <a class="link" href="../reports/portal-case-study.html">افتح دراسة الحالة ←</a>
+    </div>
+    <div class="side"><span class="eyebrow">مبني من البداية للنهاية</span><ul class="list"><li>أمان الصفوف في Supabase</li><li>مزامنة بايثون مع مطابقة</li><li>React وTypeScript وVercel</li><li>دليل تشغيل للإعداد والصلاحيات والإيقاف</li></ul></div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">دراسة حالة: قاعدة بيانات</span>
+      <h3>قاعدة بيانات تقارير لأربعة حسابات على المتاجر</h3>
+      <p>قاعدة PostgreSQL بـ 12 schema و235 جدولًا و114 view: بيانات خام، ونموذج أساسي نظيف، وخمسة دفاتر، وviews للتقارير تغذي اللوحات وبوابة الشركاء. تظهر الأرباح الشهرية الفعلية (أغسطس–نوفمبر 2026) والمنتجات الخاسرة، مع إخفاء الأسماء.</p>
+      <div class="kp"><div><b>235</b><span>جدول</span></div><div><b>114</b><span>view</span></div><div><b>109</b><span>مفتاح أجنبي</span></div></div>
+      <a class="link" href="../reports/db-case-study.html">افتح دراسة الحالة ←</a>
+    </div>
+    <div class="side"><span class="eyebrow">الطبقات</span><ul class="list"><li>خام ← أساسي / مرجعي</li><li>مالية، تشغيل، تسعير، إعلانات</li><li>views للتقارير وBI</li><li>بوابة بأمان على مستوى الصف</li></ul></div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">تقرير Power BI</span>
+      <h3>تقرير Power BI للشركاء على قاعدة بيانات حية</h3>
+      <p>ثلاث عشرة صفحة على Star schema بـ 80 مقياس DAX في 10 مجلدات. الشاشات وعرض النموذج ومقاطع من DAX موجودة في الصفحة، بعد إخفاء الأسماء.</p>
+      <a class="link" href="../reports/bi-case-study.html">افتح دراسة الحالة ←</a>
+    </div>
+    <div class="side"><span class="eyebrow">بالداخل</span><ul class="list"><li>المقارنة الشهرية بـ DATEADD</li><li>Waterfall من جدول غير مرتبط</li><li>أشرطة SVG داخل المقاييس</li></ul></div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">أداة داخلية</span>
+      <h3>Control Center: تطبيق موافقات للعمليات اليومية</h3>
+      <p>كل ما يحتاج قراري يصلني كبطاقة: المشكلة والدليل ومربع لكتابة تبريري وزر واحد للتنفيذ. يعمل على الهاتف والكمبيوتر، وdispatcher بنيته يقرأ القرارات الموافق عليها ويساعد في تنفيذها مع مساعدي البرمجي، ويرسل لي أي قرارات جديدة يصادفها.</p>
+      <div class="decide"><b>الحالة:</b> قيد الاستخدام اليومي؛ وينتقل إلى استضافة ليستخدمه أي موظف مستقبلًا.</div>
+    </div>
+    <div class="side"><span class="eyebrow">قرارات التصميم</span><ul class="list"><li>القرارات كبطاقات لا كجداول</li><li>تبرير كل موافقة يُسجَّل معها</li><li>التقارير في البوابة والقرارات في التطبيق</li></ul></div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">تقرير تحليلي</span>
+      <h3>أين يتسرب ربح المتجر</h3>
+      <p>المرتجعات والتوصيلات الفاشلة أخذت 18% من ربح الطلبات الجيدة. جوميا تحتفظ بأقل من 8% من مبيعاتها كربح مقابل 22% في نون، ونون تحصّل 25% عمولات.</p>
+      <div class="kp"><div><b>18%</b><span>من الربح ضائع</span></div><div><b>14,348</b><span>جنيه ضائع في 167 من 1,003 سطر، أبريل–نوفمبر 2026</span></div></div>
+      <div class="decide"><b>القرار:</b> إعادة تسعير أو حذف منتجات جوميا ضعيفة الهامش، وتسعير منتجات نون شاملةً العمولة، والحفاظ على حد أدنى للسعر مع نمو الحجم.</div>
+      <a class="link" href="../reports/profit-leakage.html" >افتح التقرير ←</a>
+    </div>
+    <div class="side">
+      <span class="eyebrow">المرتجعات كنسبة من إجمالي المبيعات</span>
+      <div class="bars" role="img" aria-label="المرتجعات كنسبة من إجمالي المبيعات: جوميا 18% وأمازون 11% ونون 8.5%">
+        <div class="row"><span>جوميا</span><i class="hot" style="width:100%"></i><span>18%</span></div>
+        <div class="row"><span>نون</span><i style="width:47%"></i><span>8.5%</span></div>
+        <div class="row"><span>أمازون</span><i style="width:60%"></i><span>11%</span></div>
+      </div>
+      <span class="note">الأشرطة مرسومة بالمقياس من بيانات التقرير.</span>
+    </div>
+  </article>
+    <article class="case">
+    <div>
+      <span class="tag">تقرير تحليلي</span>
+      <h3>المرتجعات والتوصيلات الفاشلة</h3>
+      <p>التوصيل الفاشل يكلف حوالي 92 جنيهًا للطلب في جوميا و71 في نون، والمرتجع حوالي 94 و80. منتج واحد عالي المبيعات حدثت مشاكل في 9 من 35 طلبًا وخسر في المجمل. و128 طلبًا بقيمة 47,099 جنيهًا ما زالت قيد التنفيذ.</p>
+      <div class="decide"><b>القرار:</b> تأكيد بيانات العميل قبل الشحن، ومطالبة المنصة بكل مرتجع، ورفع سعر المنتج الخاسر أو إيقافه.</div>
+      <a class="link" href="../reports/returns-and-failed-deliveries.html" >افتح التقرير ←</a>
+    </div>
+    <div class="side">
+      <span class="eyebrow">الخسارة لكل توصيل فاشل، بالجنيه</span>
+      <div class="bars" role="img" aria-label="الخسارة لكل توصيل فاشل بالجنيه: جوميا 92 ونون 71">
+        <div class="row"><span>جوميا</span><i class="hot" style="width:100%"></i><span>92</span></div>
+        <div class="row"><span>نون</span><i style="width:77%"></i><span>71</span></div>
+      </div>
+      <span class="note">3,791 جنيهًا على 41 سطرًا و2,332 جنيهًا على 33 سطرًا.</span>
+    </div>
+  </article>
+  </div>
+</section>
+
+<section class="sec" id="impact">
+  <span class="eyebrow">النتائج</span>
+  <h2>ماذا فعلت بالأرقام</h2>
+  <p class="lead">التقارير أعلاه ليست تمارين. أنا أدير هذه الحسابات وأتصرف بناءً على ما تُظهره البيانات.</p>
+  <div class="stats">
+    <div class="stat"><b>~120</b><span>منتج أوقفتها: غير متوفرة في السوق أو كثيرة المرتجعات، لتقليل الإلغاءات وحماية تقييم الصفحة</span></div>
+    <div class="stat"><b>+650</b><span>سعر صححتها حتى لا يكون صافي العائد بعد إجمالي التكلفة سالبًا</span></div>
+    <div class="stat"><b>إعلانات</b><span>حملات أطلقتها لزيادة الطلبات على المنتجات التي تستحق الإعلان</span></div>
+    <div class="stat"><b>روتين</b><span>قوائم دورية بالأكثر مبيعًا وربحًا والأكثر مرتجعات وتوالف</span></div>
+  </div>
+</section>
+
+<section class="sec" id="also">
+  <span class="eyebrow">أعمال أخرى</span>
+  <h2>أدوات أصغر لمستخدمين حقيقيين</h2>
+  <div class="grid">
+    <div class="card"><div class="ico" aria-hidden="true">▦</div><h3>محسّن تقطيع الزجاج</h3><p>لمُركّب زجاج: تُدخل مقاسات الشغل ومقاسات الألواح فتحصل على خطة تقطيع بأقل هالك مع المتبقي وسعر الشغلانة. يُسلَّم كنسخة تجريبية عاملة أولًا، ثم النسخة الكاملة بعد موافقة العميل.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">▤</div><h3>تطبيق تسعير وعقود لورشة زجاج</h3><p>تطبيق ويب قابل للتثبيت يسعّر الشغلانات ويجهّز رسالة العقد، منشور على Vercel.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">₪</div><h3>ملف رواتب وحضور</h3><p>نظام Excel ثنائي اللغة لستة موظفين: الحضور والسحوبات والجزاءات والعمولات والراتب، كله بمعادلات دون إدخال يدوي. مبني بسكريبتات بايثون ومُحسَّن يدويًا في Excel.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">⛁</div><h3>نموذج بيانات ERP للتجهيز والشحن</h3><p>تصميم PostgreSQL من 24 جدولًا يُحسب فيه المخزون من جدول حركات event-sourced فقط، مع قواعد العمولات والتسعير المستخلصة من نظام Excel الأصلي.</p></div>
+    <div class="card"><div class="ico" aria-hidden="true">↻</div><h3>أتمتة المتاجر الإلكترونية</h3><p>مسارات بايثون وPlaywright لإضافة المنتجات والتسعير وتجهيز الصور عبر أربع منصات، مع طابور موافقات قبل أي نشر.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="how">
+  <span class="eyebrow">طريقة عملي</span>
+  <h2>ماذا تتوقع مني</h2>
+  <ul class="list">
+    <li><b>أبدأ من القرار.</b> كل تقرير هنا ينتهي بما يجب فعله، لا بما حدث فقط.</li>
+    <li><b>أراجع الأرقام.</b> تُطابَق الإجماليات مع المصدر، وأحتفظ بصفحة جودة بيانات داخل التقرير نفسه.</li>
+    <li><b>أستخدم الذكاء الاصطناعي بوضوح.</b> أفهم كل ما أبنيه وأستطيع تنفيذه بمفردي. أستخدم أدوات الذكاء الاصطناعي لتوفير الوقت والجهد ورفع الإنتاجية؛ الأسئلة والقواعد والهيكل والفحوصات مني، وأستطيع شرح كل استعلام ومقياس في هذه المشاريع.</li>
+    <li><b>أحمي البيانات.</b> تُحذف الأسماء من المواد العامة، والصلاحيات تحدّدها قاعدة البيانات، ولا تدخل كلمات السر في الكود أبدًا.</li>
+  </ul>
+</section>
+
+<section class="sec" id="experience">
+  <span class="eyebrow">الخبرة</span>
+  <h2>عشر سنوات مع العملاء والشركاء والأرقام</h2>
+  <div class="grid">
+    <div class="card"><h3>محلل بيانات وعمليات (فريلانس)</h3><p><b>التجارة الإلكترونية · يناير 2025 – الآن</b><br>أدير نشاطًا حيًا على عدة منصات وأبني منتجات البيانات الخاصة به: قاعدة البيانات والتقارير وبوابة الشركاء والأتمتة. أوقفت حوالي 120 منتجًا ضعيفًا وصححت أكثر من 650 سعرًا حتى لا يُباع منتج بخسارة.</p></div>
+    <div class="card"><h3>أخصائي أول دعم العملاء وحل النزاعات، Tabby</h3><p><b>تقنية مالية · مارس 2025 – فبراير 2026</b><br>عالجت نزاعات عملاء معظمهم في الإمارات والكويت باستخدام CRM وSlack وGoogle Sheets. جودة حوالي 95% في أول شهرين، ثم تمت ترقيتي لحالات الخط الثاني ذات الأولوية، بمعدل حوالي 50 حالة يوميًا.</p></div>
+    <div class="card"><h3>مستشار أول دعم فني، e& مصر</h3><p><b>اتصالات · 2021 – 2025</b><br>دربت 11 فريقًا من الموظفين الجدد (15 إلى 20 فردًا لكل فريق) وبنيت تقارير أداء الموظفين. ظل مؤشر الجودة فوق 90%.</p></div>
+    <div class="card"><h3>مدير حسابات، Uber مصر</h3><p><b>2014 – 2019</b><br>شراكات السائقين وتسجيلهم، وتحليل البيانات، وإدخال البيانات، ودعم الشركاء والدعم الفني.</p></div>
+  </div>
+  <p class="lead" style="margin-top:1.2rem">التعليم: بكالوريوس جامعة عين شمس. شهادة Google Data Analytics. دورة تحليل بيانات (SQL وPower BI وExcel).</p>
+  <div class="cta"><a class="btn" href="../Omar-Mohammed-Elgendy-CV.pdf" download>تحميل السيرة الذاتية (PDF)</a></div>
+</section>
+
+<section class="sec" id="skills">
+  <span class="eyebrow">الأدوات</span>
+  <h2>ما أعمل به</h2>
+  <div class="skills">
+    <div class="tier"><span>التقارير</span><div class="chips"><span class="chip">Power BI</span><span class="chip">DAX</span><span class="chip">أمان الصفوف</span><span class="chip">Excel</span></div></div>
+    <div class="tier"><span>البيانات</span><div class="chips"><span class="chip">SQL</span><span class="chip">PostgreSQL</span><span class="chip">Supabase</span><span class="chip">Python ETL</span><span class="chip">APIs</span><span class="chip">جمع البيانات من الويب</span></div></div>
+    <div class="tier"><span>العمليات</span><div class="chips"><span class="chip">أمازون</span><span class="chip">نون</span><span class="chip">جوميا</span><span class="chip">رنين</span><span class="chip">المرتجعات والمستحقات</span></div></div>
+    <div class="tier"><span>الأشخاص</span><div class="chips"><span class="chip">دربت 11 فريقًا في e& مصر</span><span class="chip">عملاء أجانب في Tabby</span></div></div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <span class="eyebrow">متاح الآن</span>
+  <h2>عندك بيانات تحتاج تتحول إلى قرار؟</h2>
+  <div class="cta"><a class="btn" href="https://www.linkedin.com/in/omar-mohamed-elgendy" target="_blank" rel="noopener">راسلني على LinkedIn</a></div>
+  <div class="phones">
+    <div class="ph1"><span class="lbl"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Email" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg></span><span class="val">omar.mmhussien@outlook.com</span><button type="button" data-copy="omar.mmhussien@outlook.com">نسخ</button></div>
+    <div class="ph1"><span class="lbl"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Phone" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></span><span class="val">+201114004331</span><button type="button" data-copy="+201114004331">نسخ</button></div>
+    <div class="ph1"><span class="lbl"><svg class="ic wa" viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="WhatsApp" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-4.2A8.5 8.5 0 1112 20.5a8.4 8.4 0 01-4-1z"/><path d="M9 8.5c0 3.3 3.2 6.5 6.5 6.5l1-1.6-2.1-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2.1z" fill="currentColor" stroke="none"/></svg></span><span class="val">+201060028003</span><button type="button" data-copy="+201060028003">نسخ</button><a href="https://wa.me/201060028003" target="_blank" rel="noopener">افتح المحادثة</a></div>
+  </div>
+</section>
+<footer>سابقًا: Uber مصر (2014–2019)، وe& مصر (2021–2025)، وTabby (2025–2026). شهادة Google Data Analytics. بكالوريوس جامعة عين شمس.</footer>
+</div>
+<script>
+document.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',function(){
+  var v=b.getAttribute('data-copy'),row=b.parentNode.querySelector('.val');
+  function sel(){var r=document.createRange();r.selectNodeContents(row);var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='تم التحديد';}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(function(){b.textContent='تم النسخ'},sel)}else{sel()}
+  setTimeout(function(){b.textContent='نسخ'},1800);});});
+</script>
+</html>
